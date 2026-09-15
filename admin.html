@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel del vendedor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .admin-wrap { max-width: 640px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  .panel {
+    background: var(--paper); color: var(--ink);
+    border-radius: 8px; padding: 1.5rem; margin-bottom: 1.75rem;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+  }
+  .panel h2 {
+    font-family: var(--display); font-weight: 400; text-transform: uppercase;
+    font-size: 1.4rem; margin: 0 0 0.25rem;
+  }
+  .panel p.hint { font-size: 0.85rem; color: #6b6355; margin: 0 0 1rem; }
+  label { display: block; font-size: 0.8rem; font-weight: 600; margin: 0.9rem 0 0.3rem; }
+  input[type=text], input[type=password], textarea, select {
+    width: 100%; padding: 0.6rem 0.7rem; border: 1px solid #d8cfba;
+    border-radius: 5px; font-family: var(--body); font-size: 0.95rem; background: #fff;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  input[type=file] { margin-top: 0.3rem; }
+  button {
+    font-family: var(--mono); font-weight: 700; font-size: 0.85rem;
+    background: var(--rust); color: #fff; border: none; border-radius: 999px;
+    padding: 0.65rem 1.3rem; cursor: pointer; margin-top: 1.2rem;
+  }
+  button.secondary { background: var(--navy); }
+  button.danger { background: #8a2e18; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status { font-family: var(--mono); font-size: 0.8rem; margin-top: 0.8rem; }
+  .status.ok { color: #3d6b2c; }
+  .status.err { color: #b5482a; }
+  .product-row {
+    display: flex; gap: 0.8rem; align-items: center; padding: 0.6rem 0;
+    border-bottom: 1px solid #e6dfcd;
+  }
+  .product-row img { width: 46px; height: 46px; object-fit: cover; border-radius: 4px; }
+  .product-row .info { flex: 1; }
+  .product-row .info b { display: block; font-size: 0.9rem; }
+  .product-row .info span { font-size: 0.8rem; color: #6b6355; }
+  .product-row button { margin-top: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem; flex-shrink: 0; }
+  .lock-note {
+    font-family: var(--mono); font-size: 0.75rem; color: rgba(246,241,230,0.55);
+    max-width: 640px; margin: -0.5rem auto 2rem; padding: 0 1.25rem; text-align: center;
+  }
+  .palette-grid {
+    display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 0.4rem;
+  }
+  .swatch {
+    width: 60px; height: 60px; border-radius: 10px; border: 3px solid transparent;
+    cursor: pointer; padding: 6px; display: flex; flex-wrap: wrap; align-content: flex-start;
+    gap: 3px; justify-content: center;
+  }
+  .swatch.selected { border-color: var(--ink); }
+  .swatch span { width: 8px; height: 8px; border-radius: 50%; }
+  .color-row {
+    display: flex; gap: 0.9rem; flex-wrap: wrap; align-items: center; margin-top: 0.6rem;
+  }
+  .color-row label {
+    display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+    font-size: 0.7rem; font-weight: 500; margin: 0;
+  }
+  input[type=color] {
+    width: 40px; height: 40px; border: none; border-radius: 50%; padding: 0; cursor: pointer;
+    background: none;
+  }
+</style>
+</head>
+<body>
+
+<header class="stall" style="padding-bottom: 2rem;">
+  <div class="stall-inner">
+    <p class="eyebrow">PANEL DEL VENDEDOR</p>
+    <h1 style="font-size: clamp(2rem, 6vw, 3rem);">Cargar productos</h1>
+    <p class="tagline">Esta página es privada: solo quien tenga el link y tu clave puede usarla.</p>
+  </div>
+</header>
+
+<div class="admin-wrap">
+
+  <div class="panel" id="loginGate">
+    <h2>Ingresá tu clave</h2>
+    <p class="hint">La clave te la dio quien armó esta tienda. Se guarda en este celular/computadora — la próxima vez entrás directo, sin escribirla de nuevo.</p>
+    <label for="ghToken">Clave de acceso</label>
+    <input type="password" id="ghToken" placeholder="••••••••••••">
+    <button id="btnConnect">Entrar</button>
+    <p class="status" id="connectStatus"></p>
+  </div>
+
+  <div class="panel" id="siteInfoPanel" hidden>
+    <h2>2. Datos de tu tienda</h2>
+    <label for="siteName">Nombre de la tienda</label>
+    <input type="text" id="siteNameInput">
+    <label for="siteTagline">Frase corta</label>
+    <input type="text" id="siteTaglineInput">
+    <label for="siteWhatsapp">WhatsApp (con código de país, sin +)</label>
+    <input type="text" id="siteWhatsapp" placeholder="5491122334455">
+    <label for="siteInstagram">Instagram (usuario)</label>
+    <input type="text" id="siteInstagram" placeholder="@mitienda">
+
+    <label>Colores de tu tienda</label>
+    <p class="hint" style="margin:0 0 0.4rem;">Tocá la que más te guste. Se aplica en toda la página.</p>
+    <div class="palette-grid" id="paletteGrid"></div>
+    <p class="hint" id="advancedColorToggle" style="cursor:pointer; text-decoration:underline; margin-top:0.9rem;">elegir colores a mano</p>
+    <div id="advancedColorFields" hidden>
+      <div class="color-row">
+        <label>Fondo<input type="color" id="colorFondo"></label>
+        <label>Acento 1<input type="color" id="colorAcento1"></label>
+        <label>Acento 2<input type="color" id="colorAcento2"></label>
+        <label>Acento 3<input type="color" id="colorAcento3"></label>
+        <label>Acento 4<input type="color" id="colorAcento4"></label>
+        <label>Acento 5<input type="color" id="colorAcento5"></label>
+      </div>
+    </div>
+
+    <button id="btnSaveSite">Guardar datos</button>
+    <p class="status" id="siteStatus"></p>
+  </div>
+
+  <div class="panel" id="addPanel" hidden>
+    <h2 id="addPanelTitle">3. Agregar producto</h2>
+    <label for="pName">Nombre</label>
+    <input type="text" id="pName" placeholder="ej: Campera de jean talle M">
+    <label for="pPrice">Precio</label>
+    <input type="text" id="pPrice" placeholder="ej: $18.000">
+    <label for="pCategory">Categoría (opcional)</label>
+    <input type="text" id="pCategory" placeholder="ej: Camperas">
+    <label for="pCondicion">Estado</label>
+    <select id="pCondicion">
+      <option value="usado">Usado</option>
+      <option value="nuevo">Nuevo</option>
+    </select>
+    <label for="pDescription">Descripción (opcional)</label>
+    <textarea id="pDescription" placeholder="Talle, estado, detalles..."></textarea>
+    <div id="currentImageNote" class="hint" style="display:none; margin-top:0.8rem;"></div>
+    <label for="pImage">Foto (dejar vacío para no cambiarla; recomendado &lt; 5 MB)</label>
+    <input type="file" id="pImage" accept="image/*">
+    <label for="pVideo">Video corto (dejar vacío para no cambiarlo; recomendado &lt; 20 MB)</label>
+    <input type="file" id="pVideo" accept="video/*">
+    <label for="pVideoLink">O link a un video (YouTube / Instagram / TikTok)</label>
+    <input type="text" id="pVideoLink" placeholder="https://...">
+    <div style="display:flex; gap:0.6rem; align-items:center;">
+      <button id="btnAddProduct">Subir producto</button>
+      <button id="btnCancelEdit" class="secondary" hidden type="button">Cancelar edición</button>
+    </div>
+    <p class="status" id="addStatus"></p>
+  </div>
+
+  <div class="panel" id="listPanel" hidden>
+    <h2>4. Tus productos</h2>
+    <p class="hint">Tocá "Borrar" para sacar un producto de la tienda.</p>
+    <div id="productList"></div>
+  </div>
+
+</div>
+
+<p class="lock-note" id="liveLink"></p>
+
+<script src="config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

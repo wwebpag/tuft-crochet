@@ -1,0 +1,442 @@
+:root {
+  --navy: #202b3d;
+  --navy-deep: #12172a;
+  --paper: #f6f1e6;
+  --rust: #b5482a;
+  --mustard: #d9a441;
+  --sage: #7c8f6e;
+  --ink: #201d18;
+  --line-color: #8a7256;
+  --display: "Anton", sans-serif;
+  --body: "Work Sans", sans-serif;
+  --mono: "Space Mono", monospace;
+
+  /* paleta viva para banderines, luces y detalles de producto */
+  --c1: #ff6b5b; /* coral */
+  --c2: #2ec4b6; /* turquesa */
+  --c3: #f2b134; /* mostaza fuerte */
+  --c4: #e4569e; /* magenta */
+  --c5: #8fc93a; /* lima */
+}
+
+* { box-sizing: border-box; }
+
+/* Cualquier elemento marcado como "hidden" se esconde siempre, sin
+   importar qué otras reglas de display tenga su clase (soluciona que el
+   lightbox y la barra de búsqueda queden visibles por error). */
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--navy);
+  color: var(--paper);
+  font-family: var(--body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease;
+}
+
+/* ---------- Banderines ---------- */
+
+.bunting {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding-top: 1.5rem;
+  overflow: hidden;
+}
+.flag {
+  width: 0;
+  height: 0;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 20px solid var(--fc, var(--c1));
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,0.3));
+  transform-origin: top center;
+  animation: flagSway 3.4s ease-in-out infinite;
+  animation-delay: var(--fd, 0s);
+}
+@keyframes flagSway {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+/* ---------- Header / stall sign ---------- */
+
+.stall {
+  padding: 1.5rem 1.5rem 3rem;
+  text-align: center;
+  border-bottom: 3px dashed rgba(246,241,230,0.15);
+  position: relative;
+}
+
+.stall-inner { max-width: 640px; margin: 0 auto; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: var(--c3);
+  margin: 0 0 0.75rem;
+}
+
+.stall h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  letter-spacing: 0.01em;
+  line-height: 0.95;
+  margin: 0;
+  text-transform: uppercase;
+  background: linear-gradient(100deg, var(--c1) 0%, var(--c3) 35%, var(--c2) 70%, var(--c4) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% 100%;
+  animation: titleShift 8s ease-in-out infinite;
+}
+@keyframes titleShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.tagline {
+  font-size: 1.05rem;
+  color: rgba(246,241,230,0.7);
+  margin: 0.75rem 0 1.5rem;
+}
+
+.contact-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contact-btn {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--navy-deep);
+  background: var(--c3);
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.contact-btn:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+.contact-btn.alt { background: var(--c2); color: #0e2624; }
+
+/* ---------- Clothesline ---------- */
+
+main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+
+.empty-state {
+  text-align: center;
+  color: rgba(246,241,230,0.5);
+  font-family: var(--mono);
+  padding: 4rem 1rem;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+.filter-bar input,
+.filter-bar select {
+  font-family: var(--body);
+  font-size: 0.9rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.filter-bar input { flex: 1 1 220px; max-width: 320px; }
+.filter-bar input:focus,
+.filter-bar select:focus { outline: 2px solid var(--c3); }
+
+.line-row {
+  position: relative;
+  margin-bottom: 4.5rem;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.line-row.in-view { opacity: 1; transform: translateY(0); }
+
+.rope {
+  height: 3px;
+  width: 100%;
+  background: repeating-linear-gradient(
+    115deg,
+    var(--line-color) 0px, var(--line-color) 3px,
+    #a68a63 3px, #a68a63 6px
+  );
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+.lights {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  pointer-events: none;
+}
+.light {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lc, var(--c3));
+  box-shadow: 0 0 6px 1px var(--lc, var(--c3));
+  animation: twinkle 2.6s ease-in-out infinite;
+  animation-delay: var(--ld, 0s);
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2.75rem 1.5rem;
+  margin-top: -0.5rem;
+}
+
+.card {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 0.6rem 0.6rem 0.9rem;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+  cursor: pointer;
+  transform-origin: top center;
+  transform: rotate(var(--rot, 0deg));
+  animation: sway var(--dur, 5s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  transition: box-shadow 0.25s ease;
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(calc(var(--rot, 0deg) - 1.4deg)); }
+  50% { transform: rotate(calc(var(--rot, 0deg) + 1.4deg)); }
+}
+.card:hover {
+  animation-play-state: paused;
+  transform: translateY(4px) rotate(0deg) scale(1.02);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+}
+
+.pin {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 22px;
+  z-index: 2;
+}
+.pin::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent, var(--c1));
+  border-radius: 3px;
+}
+.pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: rgba(0,0,0,0.25);
+  transform: translateX(-50%);
+}
+
+.card-media {
+  width: 100%;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #ddd3bd;
+  position: relative;
+}
+.card-media img, .card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+.card:hover .card-media img,
+.card:hover .card-media video { transform: scale(1.06); }
+.play-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(23,31,44,0.85);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+}
+.condition-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.condition-badge.nuevo { background: var(--c5); color: #17210f; }
+.condition-badge.usado { background: var(--c3); color: #3a2a05; }
+
+.card-body { padding: 0.7rem 0.35rem 0.1rem; }
+
+.card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0 0 0.3rem;
+  line-height: 1.25;
+}
+
+.card-price {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent, var(--rust));
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.card-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: #fff;
+  background: var(--accent, var(--sage));
+  border-radius: 3px;
+  padding: 0.15rem 0.45rem;
+  margin-top: 0.4rem;
+}
+
+/* ---------- Destellos al tocar una prenda ---------- */
+
+.spark {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 60;
+  animation: sparkOut 0.6s ease-out forwards;
+}
+@keyframes sparkOut {
+  0% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0.3); }
+}
+
+/* ---------- Footer ---------- */
+
+.foot {
+  text-align: center;
+  padding: 2rem 1rem 3rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: rgba(246,241,230,0.4);
+}
+.foot a { color: rgba(246,241,230,0.55); }
+.admin-link {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  opacity: 0.35;
+  text-decoration: none;
+  font-size: 1rem;
+}
+.admin-link:hover { opacity: 0.8; }
+
+/* ---------- Lightbox ---------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,12,16,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 2rem;
+}
+.lightbox-content {
+  max-width: min(520px, 92vw);
+  max-height: 85vh;
+  width: 100%;
+  animation: popIn 0.25s ease;
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.lightbox-content img, .lightbox-content video {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
+  margin: 0 auto;
+}
+.lightbox-info {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 1rem 1.2rem;
+  border-radius: 0 0 6px 6px;
+}
+.lightbox-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  color: var(--paper);
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.video-link-btn {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--navy-deep);
+  background: var(--c3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .cards { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2.25rem 1rem; }
+}
+

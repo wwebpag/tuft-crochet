@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bunting" id="bunting"></div>
+
+<header class="stall">
+  <div class="stall-inner">
+    <p class="eyebrow">FERIA · PUESTO ABIERTO</p>
+    <h1 id="siteName">Mi Tienda</h1>
+    <p id="siteTagline" class="tagline">Ropa con onda, directo de la feria</p>
+    <div class="contact-row" id="contactRow"></div>
+  </div>
+</header>
+
+<main id="main">
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Buscar prenda...">
+    <select id="categoryFilter">
+      <option value="">Todas las categorías</option>
+    </select>
+    <select id="conditionFilter">
+      <option value="">Nuevo y usado</option>
+      <option value="nuevo">Solo nuevo</option>
+      <option value="usado">Solo usado</option>
+    </select>
+  </div>
+  <div id="paused" class="empty-state" hidden>
+    <p>Esta tienda está pausada por ahora. Volvé pronto 🧵</p>
+  </div>
+  <div id="empty" class="empty-state" hidden>
+    <p>Todavía no hay productos colgados en la soga.</p>
+  </div>
+  <div id="noResults" class="empty-state" hidden>
+    <p>No encontramos nada con esa búsqueda.</p>
+  </div>
+  <div id="lines"></div>
+</main>
+
+<footer class="foot">
+  <p>Hecho con hilo y aguja 🧵 <a href="admin.html" class="admin-link" aria-label="Panel del administrador">·</a></p>
+</footer>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightboxClose" aria-label="Cerrar">&times;</button>
+  <div class="lightbox-content" id="lightboxContent"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
