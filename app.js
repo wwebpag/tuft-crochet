@@ -15,6 +15,8 @@ const DEFAULT_PALETTE = {
 let ACCENTS = DEFAULT_PALETTE.acentos.slice();
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+let SITE = null;
+
 function hexToRgba(hex, alpha) {
   const h = (hex || "").replace("#", "");
   const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
@@ -29,11 +31,9 @@ function applyPalette(colores) {
       ? colores
       : DEFAULT_PALETTE;
   ACCENTS = c.acentos.slice();
-
   const root = document.documentElement.style;
   root.setProperty("--navy", c.fondo);
   c.acentos.forEach((hex, i) => root.setProperty(`--c${i + 1}`, hex));
-
   const spots = [
     [15, 8],
     [85, 18],
@@ -85,7 +85,6 @@ function renderSite(site) {
   document.title = site.nombre || "Tienda";
   document.getElementById("siteName").textContent = site.nombre || "Mi Tienda";
   document.getElementById("siteTagline").textContent = site.eslogan || "";
-
   const row = document.getElementById("contactRow");
   row.innerHTML = "";
   if (site.whatsapp) {
@@ -110,6 +109,11 @@ function renderSite(site) {
   }
 }
 
+function money(n) {
+  if (typeof n === "number") return "$" + n.toLocaleString("es-AR");
+  return n || "";
+}
+
 function openLightbox(product) {
   const lb = document.getElementById("lightbox");
   const content = document.getElementById("lightboxContent");
@@ -130,17 +134,21 @@ function openLightbox(product) {
 
   const info = document.createElement("div");
   info.className = "lightbox-info";
-  let html = `<p class="card-name">${product.name}</p><p class="card-price">${product.price || ""}</p>`;
-  if (product.condicion) {
-    html += `<span class="card-tag ${product.condicion}">${product.condicion === "nuevo" ? "Nuevo" : "Usado"}</span>`;
-  }
+  let html = `<p class="card-name">${product.name}</p><p class="card-price">${money(product.price)}</p>`;
   if (product.description) html += `<p>${product.description}</p>`;
   if (product.videoLink && !isYouTube(product.videoLink)) {
     html += `<a class="video-link-btn" href="${product.videoLink}" target="_blank" rel="noopener">▶ Ver video</a>`;
   }
   info.innerHTML = html;
-  content.appendChild(info);
 
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "add-to-cart-btn";
+  addBtn.textContent = "+ Agregar al pedido";
+  addBtn.addEventListener("click", () => agregarAlCarrito(product.id));
+  info.appendChild(addBtn);
+
+  content.appendChild(info);
   lb.hidden = false;
 }
 
@@ -190,12 +198,6 @@ function buildCard(product, index) {
     imgEl.loading = "lazy";
     media.appendChild(imgEl);
   }
-  if (product.condicion) {
-    const condBadge = document.createElement("span");
-    condBadge.className = "condition-badge " + product.condicion;
-    condBadge.textContent = product.condicion === "nuevo" ? "Nuevo" : "Usado";
-    media.appendChild(condBadge);
-  }
   if (product.video || product.videoLink) {
     const badge = document.createElement("span");
     badge.className = "play-badge";
@@ -208,9 +210,18 @@ function buildCard(product, index) {
   body.className = "card-body";
   body.innerHTML = `
     <p class="card-name">${product.name || "Producto"}</p>
-    <p class="card-price">${product.price || ""}</p>
+    <p class="card-price">${money(product.price)}</p>
     ${product.category ? `<span class="card-tag">${product.category}</span>` : ""}
   `;
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "add-to-cart-btn";
+  addBtn.textContent = "+ Agregar";
+  addBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    agregarAlCarrito(product.id);
+  });
+  body.appendChild(addBtn);
   card.appendChild(body);
 
   card.addEventListener("click", (e) => {
@@ -251,18 +262,22 @@ function renderProducts(products, isEmptyStore) {
   const chunkSize = 6;
   let globalIndex = 0;
   const rows = [];
+
   for (let i = 0; i < products.length; i += chunkSize) {
     const chunk = products.slice(i, i + chunkSize);
     const row = document.createElement("div");
     row.className = "line-row";
+
     const rope = document.createElement("div");
     rope.className = "rope";
     rope.appendChild(buildLights(Math.max(4, chunk.length * 2)));
     row.appendChild(rope);
+
     const cards = document.createElement("div");
     cards.className = "cards";
     chunk.forEach((p) => cards.appendChild(buildCard(p, globalIndex++)));
     row.appendChild(cards);
+
     linesEl.appendChild(row);
     rows.push(row);
   }
@@ -299,19 +314,129 @@ function populateCategoryFilter(products) {
 function applyFilters(allProducts) {
   const q = document.getElementById("searchInput").value.trim().toLowerCase();
   const cat = document.getElementById("categoryFilter").value;
-  const cond = document.getElementById("conditionFilter").value;
   const noResultsEl = document.getElementById("noResults");
 
   const filtered = allProducts.filter((p) => {
     const haystack = `${p.name || ""} ${p.description || ""} ${p.category || ""}`.toLowerCase();
     const matchesQ = !q || haystack.includes(q);
     const matchesCat = !cat || p.category === cat;
-    const matchesCond = !cond || p.condicion === cond;
-    return matchesQ && matchesCat && matchesCond;
+    return matchesQ && matchesCat;
   });
 
   noResultsEl.hidden = !(allProducts.length > 0 && filtered.length === 0);
   renderProducts(filtered, allProducts.length === 0);
+}
+
+// ---------- Carrito ----------
+
+let ALL_PRODUCTS = [];
+let carrito = cargarCarrito();
+
+function cargarCarrito() {
+  try {
+    return JSON.parse(localStorage.getItem("carrito") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function guardarCarrito() {
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
+function agregarAlCarrito(id) {
+  carrito[id] = (carrito[id] || 0) + 1;
+  guardarCarrito();
+  actualizarUICarrito();
+}
+
+function cambiarCantidadCarrito(id, delta) {
+  carrito[id] = (carrito[id] || 0) + delta;
+  if (carrito[id] <= 0) delete carrito[id];
+  guardarCarrito();
+  actualizarUICarrito();
+}
+
+function totalItemsCarrito() {
+  return Object.values(carrito).reduce((a, b) => a + b, 0);
+}
+
+function totalPrecioCarrito() {
+  return Object.entries(carrito).reduce((total, [id, cant]) => {
+    const p = ALL_PRODUCTS.find((x) => x.id === id);
+    return total + (p && typeof p.price === "number" ? p.price : 0) * cant;
+  }, 0);
+}
+
+function actualizarUICarrito() {
+  const fab = document.getElementById("cartFab");
+  const count = document.getElementById("cartCount");
+  const n = totalItemsCarrito();
+  count.textContent = n;
+  fab.hidden = n === 0;
+  renderCartPanel();
+}
+
+function renderCartPanel() {
+  const itemsEl = document.getElementById("cartItems");
+  const totalEl = document.getElementById("cartTotal");
+  const whatsappBtn = document.getElementById("cartWhatsapp");
+
+  const entries = Object.entries(carrito).filter(([id]) => ALL_PRODUCTS.some((p) => p.id === id));
+  if (entries.length === 0) {
+    itemsEl.innerHTML = `<p class="hint">Todavía no agregaste nada.</p>`;
+  } else {
+    itemsEl.innerHTML = entries
+      .map(([id, cant]) => {
+        const p = ALL_PRODUCTS.find((x) => x.id === id);
+        if (!p) return "";
+        return `
+        <div class="cart-item">
+          <div class="cart-item-info">
+            <span class="cart-item-name">${p.name}</span>
+            <span class="cart-item-price">${money(p.price)}</span>
+          </div>
+          <div class="cart-item-qty">
+            <button data-id="${id}" data-delta="-1">−</button>
+            <span>${cant}</span>
+            <button data-id="${id}" data-delta="1">+</button>
+          </div>
+        </div>`;
+      })
+      .join("");
+  }
+  totalEl.textContent = money(totalPrecioCarrito());
+
+  const numero = (SITE && SITE.whatsapp) || "";
+  whatsappBtn.href = numero ? `https://wa.me/${numero.replace(/[^0-9]/g, "")}?text=${mensajePedido()}` : "#";
+
+  itemsEl.querySelectorAll("button[data-id]").forEach((btn) => {
+    btn.addEventListener("click", () => cambiarCantidadCarrito(btn.dataset.id, Number(btn.dataset.delta)));
+  });
+}
+
+function mensajePedido() {
+  const lineas = Object.entries(carrito)
+    .map(([id, cant]) => {
+      const p = ALL_PRODUCTS.find((x) => x.id === id);
+      if (!p) return null;
+      return `• ${cant} x ${p.name} — ${money((p.price || 0) * cant)}`;
+    })
+    .filter(Boolean);
+  const texto = `¡Hola! Quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nTotal: ${money(totalPrecioCarrito())}`;
+  return encodeURIComponent(texto);
+}
+
+function setupCartUI() {
+  document.getElementById("cartFab").addEventListener("click", () => {
+    document.getElementById("cartOverlay").hidden = false;
+  });
+  document.getElementById("cartClose").addEventListener("click", () => {
+    document.getElementById("cartOverlay").hidden = true;
+  });
+  document.getElementById("cartOverlay").addEventListener("click", (e) => {
+    if (e.target.id === "cartOverlay") e.currentTarget.hidden = true;
+  });
 }
 
 async function init() {
@@ -320,10 +445,10 @@ async function init() {
     loadJSON("products.json"),
   ]);
 
+  SITE = site;
   applyPalette(site && site.colores);
   renderBunting();
   window.addEventListener("resize", renderBunting);
-
   renderSite(site);
 
   if (site && site.activa === false) {
@@ -333,12 +458,14 @@ async function init() {
   }
 
   const allProducts = products || [];
+  ALL_PRODUCTS = allProducts;
   populateCategoryFilter(allProducts);
   applyFilters(allProducts);
+  setupCartUI();
+  actualizarUICarrito();
 
   document.getElementById("searchInput").addEventListener("input", () => applyFilters(allProducts));
   document.getElementById("categoryFilter").addEventListener("change", () => applyFilters(allProducts));
-  document.getElementById("conditionFilter").addEventListener("change", () => applyFilters(allProducts));
 
   document.getElementById("lightboxClose").addEventListener("click", () => {
     document.getElementById("lightbox").hidden = true;
