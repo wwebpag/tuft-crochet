@@ -41,7 +41,6 @@ body {
 }
 
 /* ---------- Banderines ---------- */
-
 .bunting {
   display: flex;
   justify-content: center;
@@ -66,16 +65,13 @@ body {
 }
 
 /* ---------- Header / stall sign ---------- */
-
 .stall {
   padding: 1.5rem 1.5rem 3rem;
   text-align: center;
   border-bottom: 3px dashed rgba(246,241,230,0.15);
   position: relative;
 }
-
 .stall-inner { max-width: 640px; margin: 0 auto; }
-
 .eyebrow {
   font-family: var(--mono);
   font-size: 0.7rem;
@@ -83,7 +79,6 @@ body {
   color: var(--c3);
   margin: 0 0 0.75rem;
 }
-
 .stall h1 {
   font-family: var(--display);
   font-weight: 400;
@@ -103,20 +98,17 @@ body {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
-
 .tagline {
   font-size: 1.05rem;
   color: rgba(246,241,230,0.7);
   margin: 0.75rem 0 1.5rem;
 }
-
 .contact-row {
   display: flex;
   gap: 0.75rem;
   justify-content: center;
   flex-wrap: wrap;
 }
-
 .contact-btn {
   font-family: var(--mono);
   font-size: 0.8rem;
@@ -133,7 +125,6 @@ body {
 .contact-btn.alt { background: var(--c2); color: #0e2624; }
 
 /* ---------- Clothesline ---------- */
-
 main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 
 .empty-state {
@@ -186,7 +177,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   box-shadow: 0 1px 2px rgba(0,0,0,0.4);
   position: relative;
 }
-
 .lights {
   position: absolute;
   top: -3px;
@@ -217,7 +207,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   gap: 2.75rem 1.5rem;
   margin-top: -0.5rem;
 }
-
 .card {
   position: relative;
   background: var(--paper);
@@ -241,7 +230,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   transform: translateY(4px) rotate(0deg) scale(1.02);
   box-shadow: 0 8px 22px rgba(0,0,0,0.35);
 }
-
 .pin {
   position: absolute;
   top: -14px;
@@ -268,7 +256,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   background: rgba(0,0,0,0.25);
   transform: translateX(-50%);
 }
-
 .card-media {
   width: 100%;
   aspect-ratio: 3/4;
@@ -297,31 +284,13 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   padding: 0.25rem 0.5rem;
   border-radius: 999px;
 }
-.condition-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.condition-badge.nuevo { background: var(--c5); color: #17210f; }
-.condition-badge.usado { background: var(--c3); color: #3a2a05; }
-
 .card-body { padding: 0.7rem 0.35rem 0.1rem; }
-
 .card-name {
   font-weight: 600;
   font-size: 0.95rem;
   margin: 0 0 0.3rem;
   line-height: 1.25;
 }
-
 .card-price {
   font-family: var(--mono);
   font-weight: 700;
@@ -329,7 +298,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   font-size: 0.95rem;
   margin: 0;
 }
-
 .card-tag {
   display: inline-block;
   font-family: var(--mono);
@@ -341,8 +309,25 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   margin-top: 0.4rem;
 }
 
-/* ---------- Destellos al tocar una prenda ---------- */
+/* ---------- Botón "Agregar" ---------- */
+.add-to-cart-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--navy);
+  color: var(--paper);
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.add-to-cart-btn:hover { background: var(--accent, var(--rust)); color: #fff; }
 
+/* ---------- Destellos al tocar una prenda ---------- */
 .spark {
   position: fixed;
   width: 6px;
@@ -358,7 +343,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 }
 
 /* ---------- Footer ---------- */
-
 .foot {
   text-align: center;
   padding: 2rem 1rem 3rem;
@@ -377,8 +361,95 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 }
 .admin-link:hover { opacity: 0.8; }
 
-/* ---------- Lightbox ---------- */
+/* ---------- Carrito ---------- */
+.cart-fab {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--rust);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  z-index: 55;
+  cursor: pointer;
+}
 
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,12,16,0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 65;
+}
+@media (min-width: 620px) {
+  .cart-overlay { align-items: center; }
+}
+
+.cart-panel {
+  background: var(--paper);
+  color: var(--ink);
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+@media (min-width: 620px) {
+  .cart-panel { border-radius: 10px; max-height: 80vh; }
+}
+
+.cart-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.3rem 0.8rem;
+  border-bottom: 1px dashed #d8cfba;
+}
+.cart-panel-head h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: 1.2rem; margin: 0; }
+.cart-close { background: none; border: none; font-size: 1.3rem; color: #6b6355; padding: 0.2rem; cursor: pointer; margin: 0; }
+
+.cart-items { padding: 0.6rem 1.3rem; overflow-y: auto; flex: 1; }
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  border-bottom: 1px dashed #e6dfcd;
+  gap: 0.7rem;
+}
+.cart-item-info { display: flex; flex-direction: column; gap: 0.15rem; }
+.cart-item-name { font-weight: 600; font-size: 0.9rem; }
+.cart-item-price { font-family: var(--mono); font-size: 0.78rem; color: #6b6355; }
+
+.cart-item-qty { display: flex; align-items: center; gap: 0.6rem; }
+.cart-item-qty button {
+  width: 26px; height: 26px; border-radius: 50%; margin: 0;
+  border: 1px solid #d8cfba; background: #efe8d5; color: var(--ink);
+  font-size: 0.95rem; line-height: 1; padding: 0; display: flex; align-items: center; justify-content: center;
+}
+.cart-item-qty span { min-width: 14px; text-align: center; font-weight: 600; font-family: var(--mono); }
+
+.cart-panel-footer { padding: 1rem 1.3rem 1.3rem; border-top: 1px dashed #d8cfba; }
+.cart-total {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--mono); font-size: 1.05rem; font-weight: 700; margin-bottom: 0.8rem;
+}
+.cart-checkout { display: block; width: 100%; text-align: center; margin-top: 0; }
+
+/* ---------- Lightbox ---------- */
 .lightbox {
   position: fixed;
   inset: 0;
@@ -439,4 +510,3 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 @media (max-width: 480px) {
   .cards { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2.25rem 1rem; }
 }
-
