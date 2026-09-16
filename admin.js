@@ -13,6 +13,7 @@ const PALETTES = [
   { name: "Otoño", fondo: "#2b1d14", acentos: ["#d1495b", "#edae49", "#00798c", "#30638e", "#ff8c42"] },
   { name: "Océano", fondo: "#0b2545", acentos: ["#276fbf", "#4cc9f0", "#f4d35e", "#ee6c4d", "#13315c"] },
 ];
+
 let currentColores = { fondo: PALETTES[0].fondo, acentos: [...PALETTES[0].acentos] };
 
 function paletteMatches(p, colores) {
@@ -67,6 +68,7 @@ function getConfig() {
     return null;
   }
 }
+
 function setConfig(cfg) {
   localStorage.setItem(LS_KEY, JSON.stringify(cfg));
 }
@@ -78,6 +80,7 @@ function b64EncodeUnicode(str) {
     )
   );
 }
+
 function b64DecodeUnicode(str) {
   return decodeURIComponent(
     atob(str)
@@ -145,6 +148,10 @@ function setStatus(el, text, ok) {
   el.className = "status " + (ok ? "ok" : "err");
 }
 
+function money(n) {
+  return "$" + Math.round(Number(n) || 0).toLocaleString("es-AR");
+}
+
 // ---------- Conexión ----------
 
 async function testConnection() {
@@ -159,6 +166,7 @@ async function testConnection() {
     setStatus(statusEl, "Pegá tu clave de acceso.", false);
     return;
   }
+
   setConfig({ owner: REPO_OWNER, repo: REPO_NAME, token });
   setStatus(statusEl, "Entrando...", true);
 
@@ -173,6 +181,7 @@ async function testConnection() {
       `Tu tienda: <a href="https://${REPO_OWNER}.github.io/${REPO_NAME}/" target="_blank" style="color:var(--mustard)">https://${REPO_OWNER}.github.io/${REPO_NAME}/</a>`;
     revealPanels();
     await loadSite();
+    await loadMaterials();
     await loadProducts();
   } catch (e) {
     setStatus(statusEl, e.message, false);
@@ -181,11 +190,14 @@ async function testConnection() {
 
 function revealPanels() {
   document.getElementById("siteInfoPanel").hidden = false;
+  document.getElementById("materialsPanel").hidden = false;
   document.getElementById("addPanel").hidden = false;
   document.getElementById("listPanel").hidden = false;
 }
 
 // ---------- Datos de la tienda ----------
+
+let siteRedondeoGeneral = 100;
 
 async function loadSite() {
   const file = await ghGetFile("site.json");
@@ -199,6 +211,8 @@ async function loadSite() {
   document.getElementById("siteTaglineInput").value = site.eslogan || "";
   document.getElementById("siteWhatsapp").value = site.whatsapp || "";
   document.getElementById("siteInstagram").value = site.instagram || "";
+  document.getElementById("siteRedondeo").value = site.redondeo || 100;
+  siteRedondeoGeneral = Number(site.redondeo) || 100;
 
   if (site.colores && Array.isArray(site.colores.acentos) && site.colores.acentos.length === 5) {
     currentColores = { fondo: site.colores.fondo, acentos: [...site.colores.acentos] };
@@ -217,18 +231,204 @@ async function saveSite() {
       eslogan: document.getElementById("siteTaglineInput").value.trim(),
       whatsapp: document.getElementById("siteWhatsapp").value.trim(),
       instagram: document.getElementById("siteInstagram").value.trim(),
+      redondeo: Number(document.getElementById("siteRedondeo").value) || 100,
       colores: currentColores,
     };
+    if (existing) {
+      const prev = JSON.parse(existing.content);
+      site.activa = prev.activa !== false;
+    } else {
+      site.activa = true;
+    }
     await ghPutFile(
       "site.json",
       b64EncodeUnicode(JSON.stringify(site, null, 2)),
       "Actualizar datos de la tienda",
       existing ? existing.sha : undefined
     );
+    siteRedondeoGeneral = site.redondeo;
+    recalcular();
     setStatus(statusEl, "Guardado ✓ (puede tardar ~1 min en verse)", true);
   } catch (e) {
     setStatus(statusEl, e.message, false);
   }
+}
+
+// ---------- Materias primas ----------
+
+let materialsCache = [];
+
+async function loadMaterials() {
+  const listEl = document.getElementById("materialList");
+  listEl.innerHTML = "Cargando...";
+  const file = await ghGetFile("materiales.json");
+  materialsCache = file ? JSON.parse(file.content) : [];
+  renderMaterialList();
+  renderMuOptions();
+}
+
+function renderMaterialList() {
+  const listEl = document.getElementById("materialList");
+  listEl.innerHTML = "";
+  if (materialsCache.length === 0) {
+    listEl.innerHTML = "<p class='hint'>Todavía no cargaste materias primas.</p>";
+    return;
+  }
+  materialsCache.forEach((m) => {
+    const row = document.createElement("div");
+    row.className = "material-row";
+    row.innerHTML = `
+      <div class="info"><b>${m.nombre}</b><span>${money(m.precioUnitario)} / ${m.unidad}</span></div>
+      <button class="danger" data-id="${m.id}">Borrar</button>
+    `;
+    row.querySelector("button").addEventListener("click", () => deleteMaterial(m.id));
+    listEl.appendChild(row);
+  });
+}
+
+async function saveMaterials(materials, message) {
+  const existing = await ghGetFile("materiales.json");
+  await ghPutFile(
+    "materiales.json",
+    b64EncodeUnicode(JSON.stringify(materials, null, 2)),
+    message,
+    existing ? existing.sha : undefined
+  );
+}
+
+async function addMaterial() {
+  const statusEl = document.getElementById("materialStatus");
+  const nombre = document.getElementById("mNombre").value.trim();
+  const unidad = document.getElementById("mUnidad").value;
+  const precioUnitario = Number(document.getElementById("mPrecio").value.replace(",", "."));
+
+  if (!nombre) {
+    setStatus(statusEl, "Ponele un nombre a la materia prima.", false);
+    return;
+  }
+  if (!precioUnitario || precioUnitario <= 0) {
+    setStatus(statusEl, "Ingresá un precio válido.", false);
+    return;
+  }
+
+  setStatus(statusEl, "Guardando...", true);
+  try {
+    const nuevo = { id: Date.now().toString(36), nombre, unidad, precioUnitario };
+    materialsCache = [...materialsCache, nuevo];
+    await saveMaterials(materialsCache, `Agregar materia prima: ${nombre}`);
+    document.getElementById("mNombre").value = "";
+    document.getElementById("mPrecio").value = "";
+    renderMaterialList();
+    renderMuOptions();
+    recalcular();
+    setStatus(statusEl, "Guardado ✓", true);
+  } catch (e) {
+    setStatus(statusEl, e.message, false);
+  }
+}
+
+async function deleteMaterial(id) {
+  if (!confirm("¿Borrar esta materia prima? Si algún producto la usa, va a quedar sin ese costo.")) return;
+  try {
+    materialsCache = materialsCache.filter((m) => m.id !== id);
+    await saveMaterials(materialsCache, "Borrar materia prima");
+    renderMaterialList();
+    renderMuOptions();
+    recalcular();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// ---------- Materiales usados en el producto (filas dinámicas) ----------
+
+let muRows = []; // [{ materialId, cantidad }]
+
+function renderMuOptions() {
+  // refresca los <select> de filas ya agregadas si cambió la lista de materiales
+  document.querySelectorAll(".mu-row select").forEach((sel) => {
+    const current = sel.value;
+    sel.innerHTML = materialsCache
+      .map((m) => `<option value="${m.id}">${m.nombre} (${money(m.precioUnitario)}/${m.unidad})</option>`)
+      .join("");
+    if (current) sel.value = current;
+  });
+}
+
+function renderMuList() {
+  const cont = document.getElementById("muList");
+  cont.innerHTML = "";
+  if (materialsCache.length === 0) {
+    cont.innerHTML = "<p class='hint'>Primero cargá materias primas más arriba.</p>";
+    return;
+  }
+  muRows.forEach((row, idx) => {
+    const div = document.createElement("div");
+    div.className = "mu-row";
+    div.innerHTML = `
+      <select data-idx="${idx}" data-role="material">
+        ${materialsCache.map((m) => `<option value="${m.id}" ${m.id === row.materialId ? "selected" : ""}>${m.nombre} (${money(m.precioUnitario)}/${m.unidad})</option>`).join("")}
+      </select>
+      <input type="number" min="0" step="0.01" value="${row.cantidad || ""}" placeholder="cant." data-idx="${idx}" data-role="cantidad">
+      <button type="button" data-idx="${idx}" data-role="quitar">✕</button>
+    `;
+    cont.appendChild(div);
+  });
+
+  cont.querySelectorAll('[data-role="material"]').forEach((sel) => {
+    sel.addEventListener("change", (e) => {
+      muRows[e.target.dataset.idx].materialId = e.target.value;
+      recalcular();
+    });
+  });
+  cont.querySelectorAll('[data-role="cantidad"]').forEach((inp) => {
+    inp.addEventListener("input", (e) => {
+      muRows[e.target.dataset.idx].cantidad = Number(e.target.value) || 0;
+      recalcular();
+    });
+  });
+  cont.querySelectorAll('[data-role="quitar"]').forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      muRows.splice(Number(e.target.dataset.idx), 1);
+      renderMuList();
+      recalcular();
+    });
+  });
+}
+
+function addMuRow() {
+  if (materialsCache.length === 0) {
+    alert("Primero cargá al menos una materia prima.");
+    return;
+  }
+  muRows.push({ materialId: materialsCache[0].id, cantidad: 0 });
+  renderMuList();
+  recalcular();
+}
+
+function calcularCosto() {
+  const costoMateriales = muRows.reduce((total, row) => {
+    const mat = materialsCache.find((m) => m.id === row.materialId);
+    if (!mat) return total;
+    return total + (Number(row.cantidad) || 0) * (Number(mat.precioUnitario) || 0);
+  }, 0);
+  const manoObra = Number(document.getElementById("pManoObra").value) || 0;
+  const costoConManoObra = costoMateriales * (1 + manoObra / 100);
+  const redondeoInput = document.getElementById("pRedondeo").value;
+  const multiplo = redondeoInput ? Number(redondeoInput) : siteRedondeoGeneral;
+  const precioFinal = Math.ceil(costoConManoObra / multiplo) * multiplo;
+  return { costoMateriales, manoObra, costoConManoObra, precioFinal };
+}
+
+function recalcular() {
+  const box = document.getElementById("calcBox");
+  if (!box) return;
+  const { costoMateriales, manoObra, costoConManoObra, precioFinal } = calcularCosto();
+  box.innerHTML = `
+    Costo de materiales: ${money(costoMateriales)}<br>
+    + ${manoObra}% de mano de obra: ${money(costoConManoObra)}<br>
+    <span class="final">Precio final: ${money(precioFinal)}</span>
+  `;
 }
 
 // ---------- Productos ----------
@@ -251,7 +451,7 @@ async function loadProducts() {
     row.className = "product-row";
     row.innerHTML = `
       ${p.images && p.images[0] ? `<img src="${p.images[0]}">` : ""}
-      <div class="info"><b>${p.name}</b><span>${p.price || ""}${p.condicion ? " · " + (p.condicion === "nuevo" ? "Nuevo" : "Usado") : ""}</span></div>
+      <div class="info"><b>${p.name}</b><span>${money(p.price)}</span></div>
       <button class="secondary" data-action="edit" data-id="${p.id}">Editar</button>
       <button class="danger" data-action="delete" data-id="${p.id}">Borrar</button>
     `;
@@ -265,15 +465,17 @@ function startEdit(id) {
   const p = productsCache.find((x) => x.id === id);
   if (!p) return;
   editingId = id;
-
   document.getElementById("pName").value = p.name || "";
-  document.getElementById("pPrice").value = p.price || "";
   document.getElementById("pCategory").value = p.category || "";
-  document.getElementById("pCondicion").value = p.condicion || "usado";
   document.getElementById("pDescription").value = p.description || "";
+  document.getElementById("pManoObra").value = p.manoObraPorcentaje ?? 50;
+  document.getElementById("pRedondeo").value = p.redondeo || "";
   document.getElementById("pVideoLink").value = p.videoLink || "";
   document.getElementById("pImage").value = "";
   document.getElementById("pVideo").value = "";
+  muRows = (p.materiales || []).map((mu) => ({ ...mu }));
+  renderMuList();
+  recalcular();
 
   const note = document.getElementById("currentImageNote");
   const hasMedia = (p.images && p.images[0]) || p.video;
@@ -293,28 +495,32 @@ function startEdit(id) {
 function cancelEdit() {
   editingId = null;
   document.getElementById("pName").value = "";
-  document.getElementById("pPrice").value = "";
   document.getElementById("pCategory").value = "";
-  document.getElementById("pCondicion").value = "usado";
   document.getElementById("pDescription").value = "";
+  document.getElementById("pManoObra").value = 50;
+  document.getElementById("pRedondeo").value = "";
   document.getElementById("pImage").value = "";
   document.getElementById("pVideo").value = "";
   document.getElementById("pVideoLink").value = "";
   document.getElementById("currentImageNote").style.display = "none";
-  document.getElementById("addPanelTitle").textContent = "3. Agregar producto";
+  document.getElementById("addPanelTitle").textContent = "4. Agregar producto";
   document.getElementById("btnAddProduct").textContent = "Subir producto";
   document.getElementById("btnCancelEdit").hidden = true;
   document.getElementById("addStatus").textContent = "";
+  muRows = [];
+  renderMuList();
+  recalcular();
 }
 
 async function saveProduct() {
   const statusEl = document.getElementById("addStatus");
   const btn = document.getElementById("btnAddProduct");
   const name = document.getElementById("pName").value.trim();
-  const price = document.getElementById("pPrice").value.trim();
   const category = document.getElementById("pCategory").value.trim();
-  const condicion = document.getElementById("pCondicion").value;
   const description = document.getElementById("pDescription").value.trim();
+  const manoObraPorcentaje = Number(document.getElementById("pManoObra").value) || 0;
+  const redondeoInput = document.getElementById("pRedondeo").value;
+  const redondeo = redondeoInput ? Number(redondeoInput) : null;
   const imageFile = document.getElementById("pImage").files[0];
   const videoFile = document.getElementById("pVideo").files[0];
   const videoLink = document.getElementById("pVideoLink").value.trim();
@@ -327,6 +533,8 @@ async function saveProduct() {
     setStatus(statusEl, "El video pesa mucho (>25 MB). Comprimilo o usá un link.", false);
     return;
   }
+
+  const { precioFinal } = calcularCosto();
 
   btn.disabled = true;
   try {
@@ -352,33 +560,26 @@ async function saveProduct() {
     const existing = await ghGetFile("products.json");
     const products = existing ? JSON.parse(existing.content) : [];
 
+    const datosProducto = {
+      name,
+      price: precioFinal,
+      category,
+      description,
+      materiales: muRows.filter((r) => r.materialId),
+      manoObraPorcentaje,
+      redondeo,
+      images: imagePath ? [imagePath] : [],
+      video: videoPath,
+      videoLink: videoLink || null,
+    };
+
     if (editingId) {
       const idx = products.findIndex((x) => x.id === editingId);
       if (idx !== -1) {
-        products[idx] = {
-          ...products[idx],
-          name,
-          price,
-          category,
-          condicion,
-          description,
-          images: imagePath ? [imagePath] : [],
-          video: videoPath,
-          videoLink: videoLink || null,
-        };
+        products[idx] = { ...products[idx], ...datosProducto };
       }
     } else {
-      products.unshift({
-        id: stamp.toString(36),
-        name,
-        price,
-        category,
-        condicion,
-        description,
-        images: imagePath ? [imagePath] : [],
-        video: videoPath,
-        videoLink: videoLink || null,
-      });
+      products.unshift({ id: stamp.toString(36), ...datosProducto });
     }
 
     await ghPutFile(
@@ -425,6 +626,7 @@ function init() {
     document.getElementById("ghToken").value = cfg.token;
     testConnection();
   }
+
   document.getElementById("advancedColorToggle").addEventListener("click", () => {
     const el = document.getElementById("advancedColorFields");
     el.hidden = !el.hidden;
@@ -433,10 +635,18 @@ function init() {
     document.getElementById(id).addEventListener("input", readColorInputs);
   });
   renderPaletteGrid();
+
   document.getElementById("btnConnect").addEventListener("click", testConnection);
   document.getElementById("btnSaveSite").addEventListener("click", saveSite);
+  document.getElementById("btnAddMaterial").addEventListener("click", addMaterial);
+  document.getElementById("btnAddMu").addEventListener("click", addMuRow);
+  document.getElementById("pManoObra").addEventListener("input", recalcular);
+  document.getElementById("pRedondeo").addEventListener("input", recalcular);
   document.getElementById("btnAddProduct").addEventListener("click", saveProduct);
   document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
+
+  renderMuList();
+  recalcular();
 }
 
 init();
