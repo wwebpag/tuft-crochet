@@ -369,11 +369,8 @@ function totalPrecioCarrito() {
 }
 
 function actualizarUICarrito() {
-  const fab = document.getElementById("cartFab");
   const count = document.getElementById("cartCount");
-  const n = totalItemsCarrito();
-  count.textContent = n;
-  fab.hidden = n === 0;
+  count.textContent = totalItemsCarrito();
   renderCartPanel();
 }
 
@@ -407,8 +404,7 @@ function renderCartPanel() {
   }
   totalEl.textContent = money(totalPrecioCarrito());
 
-  const numero = (SITE && SITE.whatsapp) || "";
-  whatsappBtn.href = numero ? `https://wa.me/${numero.replace(/[^0-9]/g, "")}?text=${mensajePedido()}` : "#";
+    updateWhatsappHref();
 
   itemsEl.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.addEventListener("click", () => cambiarCantidadCarrito(btn.dataset.id, Number(btn.dataset.delta)));
@@ -423,8 +419,19 @@ function mensajePedido() {
       return `• ${cant} x ${p.name} — ${money((p.price || 0) * cant)}`;
     })
     .filter(Boolean);
-  const texto = `¡Hola! Quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nTotal: ${money(totalPrecioCarrito())}`;
+  const nombre = document.getElementById("cartNombre").value.trim();
+  const direccion = document.getElementById("cartDireccion").value.trim();
+  let texto = `¡Hola! Quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nTotal: ${money(totalPrecioCarrito())}`;
+  if (nombre) texto += `\n\nNombre: ${nombre}`;
+  if (direccion) texto += `\nDirección/retiro: ${direccion}`;
   return encodeURIComponent(texto);
+}
+
+function updateWhatsappHref() {
+  const numero = (SITE && SITE.whatsapp) || "";
+  document.getElementById("cartWhatsapp").href = numero
+    ? `https://wa.me/${numero.replace(/[^0-9]/g, "")}?text=${mensajePedido()}`
+    : "#";
 }
 
 function setupCartUI() {
@@ -437,6 +444,8 @@ function setupCartUI() {
   document.getElementById("cartOverlay").addEventListener("click", (e) => {
     if (e.target.id === "cartOverlay") e.currentTarget.hidden = true;
   });
+  document.getElementById("cartNombre").addEventListener("input", updateWhatsappHref);
+  document.getElementById("cartDireccion").addEventListener("input", updateWhatsappHref);
 }
 
 async function init() {
