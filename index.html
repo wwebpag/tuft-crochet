@@ -37,12 +37,15 @@
 <div id="lines"></div>
 </main>
 <footer class="foot">
-<p>Hecho con hilo y aguja 🧵 <a href="admin.html" class="admin-link" aria-label="Panel del administrador">·</a></p>
+<p>Hecho con hilo y aguja 🧵</p>
 </footer>
 
-<button class="cart-fab" id="cartFab" hidden>
+<div class="top-right-bar">
+<button class="cart-fab" id="cartFab">
 🧺 <span id="cartCount">0</span>
 </button>
+<a href="admin.html" class="admin-link" aria-label="Panel del administrador">·</a>
+</div>
 
 <div class="cart-overlay" id="cartOverlay" hidden>
 <div class="cart-panel">
@@ -52,6 +55,10 @@
 </div>
 <div id="cartItems" class="cart-items"></div>
 <div class="cart-panel-footer">
+<label for="cartNombre" class="cart-field-label">Tu nombre</label>
+<input type="text" id="cartNombre" placeholder="¿Cómo te llamamos?">
+<label for="cartDireccion" class="cart-field-label">Dirección o dónde retirás</label>
+<input type="text" id="cartDireccion" placeholder="Dirección de entrega o punto de retiro">
 <div class="cart-total"><span>Total</span><span id="cartTotal">$0</span></div>
 <a href="#" id="cartWhatsapp" class="contact-btn cart-checkout" target="_blank" rel="noopener">Hacer pedido por WhatsApp</a>
 </div>
