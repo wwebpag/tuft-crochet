@@ -189,10 +189,17 @@ async function testConnection() {
 }
 
 function revealPanels() {
-  document.getElementById("siteInfoPanel").hidden = false;
-  document.getElementById("materialsPanel").hidden = false;
-  document.getElementById("addPanel").hidden = false;
-  document.getElementById("listPanel").hidden = false;
+  document.getElementById("adminTabs").hidden = false;
+  showTab("siteInfoPanel");
+}
+
+function showTab(panelId) {
+  ["siteInfoPanel", "materialsPanel", "addPanel", "listPanel"].forEach((id) => {
+    document.getElementById(id).hidden = id !== panelId;
+  });
+  document.querySelectorAll(".admin-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === panelId);
+  });
 }
 
 // ---------- Datos de la tienda ----------
@@ -462,8 +469,9 @@ async function loadProducts() {
 }
 
 function startEdit(id) {
-  const p = productsCache.find((x) => x.id === id);
+   const p = productsCache.find((x) => x.id === id);
   if (!p) return;
+  showTab("addPanel");
   editingId = id;
   document.getElementById("pName").value = p.name || "";
   document.getElementById("pCategory").value = p.category || "";
@@ -503,7 +511,7 @@ function cancelEdit() {
   document.getElementById("pVideo").value = "";
   document.getElementById("pVideoLink").value = "";
   document.getElementById("currentImageNote").style.display = "none";
-  document.getElementById("addPanelTitle").textContent = "4. Agregar producto";
+  document.getElementById("addPanelTitle").textContent = "Agregar producto";  
   document.getElementById("btnAddProduct").textContent = "Subir producto";
   document.getElementById("btnCancelEdit").hidden = true;
   document.getElementById("addStatus").textContent = "";
@@ -644,7 +652,9 @@ function init() {
   document.getElementById("pRedondeo").addEventListener("input", recalcular);
   document.getElementById("btnAddProduct").addEventListener("click", saveProduct);
   document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
-
+  document.querySelectorAll(".admin-tab").forEach((btn) => {
+  btn.addEventListener("click", () => showTab(btn.dataset.tab));
+  });
   renderMuList();
   recalcular();
 }
