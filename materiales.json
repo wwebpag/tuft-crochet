@@ -16,5 +16,11 @@
     "nombre": "ojos",
     "unidad": "unidad",
     "precioUnitario": 200
+  },
+  {
+    "id": "mu793khm",
+    "nombre": "nariz",
+    "unidad": "unidad",
+    "precioUnitario": 200
   }
 ]
