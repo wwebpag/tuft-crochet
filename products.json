@@ -1,5 +1,29 @@
 [
   {
+    "id": "mu798qvm",
+    "name": "Nube",
+    "price": 5202600,
+    "category": "Alfombra",
+    "description": "1x1",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 2000
+      },
+      {
+        "materialId": "mu7940vm",
+        "cantidad": 1
+      }
+    ],
+    "manoObraPorcentaje": 30,
+    "redondeo": null,
+    "images": [
+      "assets/1789753868050-whatsapp-image-2026-09-18-at-14.36.35--1-.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu7974j9",
     "name": "Panda",
     "price": 5202600,
