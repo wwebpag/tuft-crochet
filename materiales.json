@@ -10,5 +10,11 @@
     "nombre": "relleno",
     "unidad": "gramo",
     "precioUnitario": 1000
+  },
+  {
+    "id": "mu793c2z",
+    "nombre": "ojos",
+    "unidad": "unidad",
+    "precioUnitario": 200
   }
 ]
