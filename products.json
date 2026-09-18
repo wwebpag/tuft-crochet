@@ -1,5 +1,37 @@
 [
   {
+    "id": "mu79cbgq",
+    "name": "Buho",
+    "price": 1275900,
+    "category": "Amigurumis",
+    "description": "20cm",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 400
+      },
+      {
+        "materialId": "mu792zfn",
+        "cantidad": 50
+      },
+      {
+        "materialId": "mu793c2z",
+        "cantidad": 2
+      },
+      {
+        "materialId": "mu793khm",
+        "cantidad": 1
+      }
+    ],
+    "manoObraPorcentaje": 50,
+    "redondeo": null,
+    "images": [
+      "assets/1789754034698-whatsapp-image-2026-09-18-at-14.34.40.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu79ammo",
     "name": "Conejito",
     "price": 975900,
