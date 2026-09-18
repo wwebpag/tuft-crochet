@@ -4,5 +4,11 @@
     "nombre": "lana",
     "unidad": "gramo",
     "precioUnitario": 2000
+  },
+  {
+    "id": "mu792zfn",
+    "nombre": "relleno",
+    "unidad": "gramo",
+    "precioUnitario": 1000
   }
 ]
