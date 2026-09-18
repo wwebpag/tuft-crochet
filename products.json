@@ -34,17 +34,17 @@
   {
     "id": "mu79dxfe",
     "name": "Harri pother",
-    "price": 1000,
+    "price": 22800,
     "category": "Amigurumis",
     "description": "30cm",
     "materiales": [
       {
         "materialId": "mu5rzyda",
-        "cantidad": 0.7
+        "cantidad": 700
       },
       {
         "materialId": "mu792zfn",
-        "cantidad": 0.6
+        "cantidad": 60
       },
       {
         "materialId": "mu793khm",
