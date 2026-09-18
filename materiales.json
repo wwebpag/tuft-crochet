@@ -22,5 +22,11 @@
     "nombre": "nariz",
     "unidad": "unidad",
     "precioUnitario": 200
+  },
+  {
+    "id": "mu7940vm",
+    "nombre": "rejilla",
+    "unidad": "unidad",
+    "precioUnitario": 2000
   }
 ]
