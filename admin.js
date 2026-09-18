@@ -255,6 +255,7 @@ async function saveSite() {
     );
     siteRedondeoGeneral = site.redondeo;
     recalcular();
+    await recalcularProductosGuardados();
     setStatus(statusEl, "Guardado ✓ (puede tardar ~1 min en verse)", true);
   } catch (e) {
     setStatus(statusEl, e.message, false);
@@ -264,6 +265,7 @@ async function saveSite() {
 // ---------- Materias primas ----------
 
 let materialsCache = [];
+let editingMaterialId = null;
 
 async function loadMaterials() {
   const listEl = document.getElementById("materialList");
@@ -281,16 +283,88 @@ function renderMaterialList() {
     listEl.innerHTML = "<p class='hint'>Todavía no cargaste materias primas.</p>";
     return;
   }
+  const unidades = ["gramo", "metro", "unidad", "ovillo", "ml", "cm"];
   materialsCache.forEach((m) => {
     const row = document.createElement("div");
     row.className = "material-row";
-    row.innerHTML = `
-      <div class="info"><b>${m.nombre}</b><span>${money(m.precioUnitario)} / ${m.unidad}</span></div>
-      <button class="danger" data-id="${m.id}">Borrar</button>
-    `;
-    row.querySelector("button").addEventListener("click", () => deleteMaterial(m.id));
+    if (editingMaterialId === m.id) {
+      row.innerHTML = `
+        <div class="material-edit-fields">
+          <input type="text" value="${m.nombre}" data-edit="nombre">
+          <select data-edit="unidad">
+            ${unidades.map((u) => `<option value="${u}" ${m.unidad === u ? "selected" : ""}>${u}</option>`).join("")}
+          </select>
+          <input type="text" value="${m.precioUnitario}" data-edit="precio">
+        </div>
+        <button data-action="guardar" data-id="${m.id}">Guardar</button>
+        <button class="secondary" data-action="cancelar">Cancelar</button>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="info"><b>${m.nombre}</b><span>${money(m.precioUnitario)} / ${m.unidad}</span></div>
+        <button class="secondary" data-action="editar" data-id="${m.id}">Editar</button>
+        <button class="danger" data-action="borrar" data-id="${m.id}">Borrar</button>
+      `;
+    }
     listEl.appendChild(row);
   });
+
+  listEl.querySelectorAll('[data-action="editar"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingMaterialId = btn.dataset.id;
+      renderMaterialList();
+    });
+  });
+  listEl.querySelectorAll('[data-action="cancelar"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingMaterialId = null;
+      renderMaterialList();
+    });
+  });
+  listEl.querySelectorAll('[data-action="borrar"]').forEach((btn) => {
+    btn.addEventListener("click", () => deleteMaterial(btn.dataset.id));
+  });
+  listEl.querySelectorAll('[data-action="guardar"]').forEach((btn) => {
+    btn.addEventListener("click", () => saveMaterialEdit(btn.dataset.id));
+  });
+}
+
+async function saveMaterialEdit(id) {
+  const row = [...document.querySelectorAll(".material-row")].find((r) =>
+    r.querySelector(`[data-action="guardar"][data-id="${id}"]`)
+  );
+  const nombre = row.querySelector('[data-edit="nombre"]').value.trim();
+  const unidad = row.querySelector('[data-edit="unidad"]').value;
+  const precioUnitario = Number(row.querySelector('[data-edit="precio"]').value.replace(",", "."));
+
+  if (!nombre) {
+    alert("Ponele un nombre a la materia prima.");
+    return;
+  }
+  if (!precioUnitario || precioUnitario <= 0) {
+    alert("Ingresá un precio válido.");
+    return;
+  }
+
+  const statusEl = document.getElementById("materialStatus");
+  setStatus(statusEl, "Guardando...", true);
+  try {
+    materialsCache = materialsCache.map((m) => (m.id === id ? { ...m, nombre, unidad, precioUnitario } : m));
+    await saveMaterials(materialsCache, `Editar materia prima: ${nombre}`);
+    editingMaterialId = null;
+    renderMaterialList();
+    renderMuOptions();
+    recalcular();
+    setStatus(statusEl, "Actualizando precios de productos...", true);
+    const huboCambios = await recalcularProductosGuardados();
+    setStatus(
+      statusEl,
+      huboCambios ? "Guardado ✓ — los productos que la usan ya tienen el precio actualizado" : "Guardado ✓",
+      true
+    );
+  } catch (e) {
+    setStatus(statusEl, e.message, false);
+  }
 }
 
 async function saveMaterials(materials, message) {
@@ -328,6 +402,7 @@ async function addMaterial() {
     renderMaterialList();
     renderMuOptions();
     recalcular();
+    await recalcularProductosGuardados();
     setStatus(statusEl, "Guardado ✓", true);
   } catch (e) {
     setStatus(statusEl, e.message, false);
@@ -342,9 +417,43 @@ async function deleteMaterial(id) {
     renderMaterialList();
     renderMuOptions();
     recalcular();
+    await recalcularProductosGuardados();
   } catch (e) {
     alert(e.message);
   }
+}
+
+// Recalcula el precio de TODOS los productos guardados en base a los
+// precios actuales de materiales primas (se llama después de agregar,
+// editar o borrar una materia prima, y después de guardar la config
+// general por si cambió el redondeo).
+async function recalcularProductosGuardados() {
+  const existing = await ghGetFile("products.json");
+  if (!existing) return false;
+  const products = JSON.parse(existing.content);
+  let changed = false;
+
+  products.forEach((p) => {
+    if (p.materiales && p.materiales.length) {
+      const { precioFinal } = calcularPrecioDesdeDatos(p.materiales, p.manoObraPorcentaje, p.redondeo);
+      if (precioFinal !== p.price) {
+        p.price = precioFinal;
+        changed = true;
+      }
+    }
+  });
+
+  if (changed) {
+    await ghPutFile(
+      "products.json",
+      b64EncodeUnicode(JSON.stringify(products, null, 2)),
+      "Recalcular precios por cambio en materias primas",
+      existing.sha
+    );
+    productsCache = products;
+    if (!document.getElementById("listPanel").hidden) await loadProducts();
+  }
+  return changed;
 }
 
 // ---------- Materiales usados en el producto (filas dinámicas) ----------
@@ -413,18 +522,23 @@ function addMuRow() {
   recalcular();
 }
 
-function calcularCosto() {
-  const costoMateriales = muRows.reduce((total, row) => {
+function calcularPrecioDesdeDatos(materiales, manoObraPorcentaje, redondeoProducto) {
+  const costoMateriales = (materiales || []).reduce((total, row) => {
     const mat = materialsCache.find((m) => m.id === row.materialId);
     if (!mat) return total;
     return total + (Number(row.cantidad) || 0) * (Number(mat.precioUnitario) || 0);
   }, 0);
-  const manoObra = Number(document.getElementById("pManoObra").value) || 0;
+  const manoObra = Number(manoObraPorcentaje) || 0;
   const costoConManoObra = costoMateriales * (1 + manoObra / 100);
-  const redondeoInput = document.getElementById("pRedondeo").value;
-  const multiplo = redondeoInput ? Number(redondeoInput) : siteRedondeoGeneral;
+  const multiplo = redondeoProducto ? Number(redondeoProducto) : siteRedondeoGeneral;
   const precioFinal = Math.ceil(costoConManoObra / multiplo) * multiplo;
   return { costoMateriales, manoObra, costoConManoObra, precioFinal };
+}
+
+function calcularCosto() {
+  const manoObra = document.getElementById("pManoObra").value;
+  const redondeoInput = document.getElementById("pRedondeo").value;
+  return calcularPrecioDesdeDatos(muRows, manoObra, redondeoInput);
 }
 
 function recalcular() {
