@@ -1,5 +1,25 @@
 [
   {
+    "id": "mu78338x",
+    "name": "gallina",
+    "price": 3000,
+    "category": "amigurumis",
+    "description": "",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 1
+      }
+    ],
+    "manoObraPorcentaje": 50,
+    "redondeo": null,
+    "images": [
+      "assets/1789751924529-apa-cambios.jpg.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu5s2qun",
     "name": "conejo",
     "price": 6000,
