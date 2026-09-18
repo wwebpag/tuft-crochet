@@ -4,7 +4,7 @@
   "whatsapp": "",
   "instagram": "",
   "activa": true,
-  "redondeo": 100,
+  "redondeo": 1000,
   "colores": {
     "fondo": "#202b3d",
     "acentos": ["#ff6b5b", "#2ec4b6", "#f2b134", "#e4569e", "#8fc93a"]
