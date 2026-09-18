@@ -1,5 +1,37 @@
 [
   {
+    "id": "mu79dxfe",
+    "name": "Harri pother",
+    "price": 2190900,
+    "category": "Amigurumis",
+    "description": "30cm",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 700
+      },
+      {
+        "materialId": "mu792zfn",
+        "cantidad": 60
+      },
+      {
+        "materialId": "mu793khm",
+        "cantidad": 1
+      },
+      {
+        "materialId": "mu793c2z",
+        "cantidad": 2
+      }
+    ],
+    "manoObraPorcentaje": 50,
+    "redondeo": null,
+    "images": [
+      "assets/1789754109818-whatsapp-image-2026-09-18-at-14.34.41.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu79cbgq",
     "name": "Buho",
     "price": 1275900,
