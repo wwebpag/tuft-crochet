@@ -1,5 +1,37 @@
 [
   {
+    "id": "mu79p8l6",
+    "name": "Reno",
+    "price": 945900,
+    "category": "Amigurumis",
+    "description": "20cm",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 300
+      },
+      {
+        "materialId": "mu792zfn",
+        "cantidad": 30
+      },
+      {
+        "materialId": "mu793khm",
+        "cantidad": 1
+      },
+      {
+        "materialId": "mu793c2z",
+        "cantidad": 2
+      }
+    ],
+    "manoObraPorcentaje": 50,
+    "redondeo": null,
+    "images": [
+      "assets/1789754637498-whatsapp-image-2026-09-18-at-14.34.40--1-.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu79dxfe",
     "name": "Harri pother",
     "price": 2190900,
