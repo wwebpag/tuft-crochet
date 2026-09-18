@@ -1,5 +1,37 @@
 [
   {
+    "id": "mu79ammo",
+    "name": "Conejito",
+    "price": 975900,
+    "category": "Amigurumis",
+    "description": "20 cm",
+    "materiales": [
+      {
+        "materialId": "mu5rzyda",
+        "cantidad": 300
+      },
+      {
+        "materialId": "mu792zfn",
+        "cantidad": 50
+      },
+      {
+        "materialId": "mu793c2z",
+        "cantidad": 2
+      },
+      {
+        "materialId": "mu793khm",
+        "cantidad": 1
+      }
+    ],
+    "manoObraPorcentaje": 50,
+    "redondeo": null,
+    "images": [
+      "assets/1789753955856-whatsapp-image-2026-09-18-at-14.34.41--1-.jpeg"
+    ],
+    "video": null,
+    "videoLink": null
+  },
+  {
     "id": "mu798qvm",
     "name": "Nube",
     "price": 5202600,
