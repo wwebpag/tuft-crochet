@@ -2,13 +2,13 @@
   {
     "id": "mu79p8l6",
     "name": "Reno",
-    "price": 92000,
+    "price": 17000,
     "category": "Amigurumis",
     "description": "20cm",
     "materiales": [
       {
         "materialId": "mu5rzyda",
-        "cantidad": 300
+        "cantidad": 50
       },
       {
         "materialId": "mu792zfn",
