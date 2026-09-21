@@ -16,6 +16,8 @@ let ACCENTS = DEFAULT_PALETTE.acentos.slice();
 const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let SITE = null;
+let CATEGORIES = [];
+let ALL_PRODUCTS = [];
 
 function hexToRgba(hex, alpha) {
   const h = (hex || "").replace("#", "");
@@ -107,12 +109,54 @@ function renderSite(site) {
     a.textContent = "@" + handle;
     row.appendChild(a);
   }
+
+  const banner = document.getElementById("ofertaGlobalBanner");
+  if (site.ofertaGlobal && site.ofertaGlobal.activa && site.ofertaGlobal.porcentaje > 0) {
+    banner.hidden = false;
+    banner.textContent = `🎉 ${site.ofertaGlobal.porcentaje}% OFF en toda la tienda`;
+  } else {
+    banner.hidden = true;
+  }
 }
 
 function money(n) {
-  if (typeof n === "number") return "$" + n.toLocaleString("es-AR");
+  if (typeof n === "number") return "$" + Math.round(n).toLocaleString("es-AR");
   return n || "";
 }
+
+// ---------- Ofertas ----------
+
+function ofertaVigente(product) {
+  if (product.oferta && product.oferta.activa && Number(product.oferta.porcentaje) > 0) {
+    return Number(product.oferta.porcentaje);
+  }
+  const cat = CATEGORIES.find((c) => c.nombre === product.category);
+  if (cat && cat.oferta && cat.oferta.activa && Number(cat.oferta.porcentaje) > 0) {
+    return Number(cat.oferta.porcentaje);
+  }
+  if (SITE && SITE.ofertaGlobal && SITE.ofertaGlobal.activa && Number(SITE.ofertaGlobal.porcentaje) > 0) {
+    return Number(SITE.ofertaGlobal.porcentaje);
+  }
+  return 0;
+}
+
+function precioConOferta(product) {
+  const base = typeof product.price === "number" ? product.price : Number(product.price) || 0;
+  const pct = ofertaVigente(product);
+  if (!pct) return { base, final: base, pct: 0 };
+  const final = Math.round(base * (1 - pct / 100));
+  return { base, final, pct };
+}
+
+function priceBlockHTML(product) {
+  const { base, final, pct } = precioConOferta(product);
+  if (pct > 0) {
+    return `<p class="card-price"><span class="price-old">${money(base)}</span> <span class="price-new">${money(final)}</span> <span class="oferta-tag">-${pct}%</span></p>`;
+  }
+  return `<p class="card-price">${money(base)}</p>`;
+}
+
+// ---------- Lightbox ----------
 
 function openLightbox(product) {
   const lb = document.getElementById("lightbox");
@@ -134,7 +178,7 @@ function openLightbox(product) {
 
   const info = document.createElement("div");
   info.className = "lightbox-info";
-  let html = `<p class="card-name">${product.name}</p><p class="card-price">${money(product.price)}</p>`;
+  let html = `<p class="card-name">${product.name}</p>${priceBlockHTML(product)}`;
   if (product.description) html += `<p>${product.description}</p>`;
   if (product.videoLink && !isYouTube(product.videoLink)) {
     html += `<a class="video-link-btn" href="${product.videoLink}" target="_blank" rel="noopener">▶ Ver video</a>`;
@@ -198,6 +242,12 @@ function buildCard(product, index) {
     imgEl.loading = "lazy";
     media.appendChild(imgEl);
   }
+  if (ofertaVigente(product) > 0) {
+    const ofertaBadge = document.createElement("span");
+    ofertaBadge.className = "oferta-badge";
+    ofertaBadge.textContent = `-${ofertaVigente(product)}%`;
+    media.appendChild(ofertaBadge);
+  }
   if (product.video || product.videoLink) {
     const badge = document.createElement("span");
     badge.className = "play-badge";
@@ -210,7 +260,7 @@ function buildCard(product, index) {
   body.className = "card-body";
   body.innerHTML = `
     <p class="card-name">${product.name || "Producto"}</p>
-    <p class="card-price">${money(product.price)}</p>
+    ${priceBlockHTML(product)}
     ${product.category ? `<span class="card-tag">${product.category}</span>` : ""}
   `;
   const addBtn = document.createElement("button");
@@ -302,8 +352,10 @@ function renderProducts(products, isEmptyStore) {
 
 function populateCategoryFilter(products) {
   const select = document.getElementById("categoryFilter");
-  const categories = [...new Set(products.map((p) => p.category).filter(Boolean))].sort();
-  categories.forEach((cat) => {
+  const names = CATEGORIES.length
+    ? CATEGORIES.map((c) => c.nombre)
+    : [...new Set(products.map((p) => p.category).filter(Boolean))].sort();
+  names.forEach((cat) => {
     const opt = document.createElement("option");
     opt.value = cat;
     opt.textContent = cat;
@@ -329,7 +381,6 @@ function applyFilters(allProducts) {
 
 // ---------- Carrito ----------
 
-let ALL_PRODUCTS = [];
 let carrito = cargarCarrito();
 
 function cargarCarrito() {
@@ -361,11 +412,24 @@ function totalItemsCarrito() {
   return Object.values(carrito).reduce((a, b) => a + b, 0);
 }
 
-function totalPrecioCarrito() {
+function totalSinRecargo() {
   return Object.entries(carrito).reduce((total, [id, cant]) => {
     const p = ALL_PRODUCTS.find((x) => x.id === id);
-    return total + (p && typeof p.price === "number" ? p.price : 0) * cant;
+    if (!p) return total;
+    return total + precioConOferta(p).final * cant;
   }, 0);
+}
+
+function recargoActual() {
+  const pago = document.getElementById("cartPago").value;
+  if (pago !== "credito") return 0;
+  return Number((SITE && SITE.recargoCredito) || 0);
+}
+
+function totalConRecargo() {
+  const subtotal = totalSinRecargo();
+  const recargoPct = recargoActual();
+  return subtotal * (1 + recargoPct / 100);
 }
 
 function actualizarUICarrito() {
@@ -377,7 +441,7 @@ function actualizarUICarrito() {
 function renderCartPanel() {
   const itemsEl = document.getElementById("cartItems");
   const totalEl = document.getElementById("cartTotal");
-  const whatsappBtn = document.getElementById("cartWhatsapp");
+  const recargoNota = document.getElementById("recargoNota");
 
   const entries = Object.entries(carrito).filter(([id]) => ALL_PRODUCTS.some((p) => p.id === id));
   if (entries.length === 0) {
@@ -391,7 +455,7 @@ function renderCartPanel() {
         <div class="cart-item">
           <div class="cart-item-info">
             <span class="cart-item-name">${p.name}</span>
-            <span class="cart-item-price">${money(p.price)}</span>
+            <span class="cart-item-price">${money(precioConOferta(p).final)}</span>
           </div>
           <div class="cart-item-qty">
             <button data-id="${id}" data-delta="-1">−</button>
@@ -402,9 +466,17 @@ function renderCartPanel() {
       })
       .join("");
   }
-  totalEl.textContent = money(totalPrecioCarrito());
 
-    updateWhatsappHref();
+  const recargoPct = recargoActual();
+  if (recargoPct > 0) {
+    recargoNota.hidden = false;
+    recargoNota.textContent = `Con tarjeta de crédito se suma ${recargoPct}% de recargo.`;
+  } else {
+    recargoNota.hidden = true;
+  }
+
+  totalEl.textContent = money(totalConRecargo());
+  updateWhatsappHref();
 
   itemsEl.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.addEventListener("click", () => cambiarCantidadCarrito(btn.dataset.id, Number(btn.dataset.delta)));
@@ -416,14 +488,29 @@ function mensajePedido() {
     .map(([id, cant]) => {
       const p = ALL_PRODUCTS.find((x) => x.id === id);
       if (!p) return null;
-      return `• ${cant} x ${p.name} — ${money((p.price || 0) * cant)}`;
+      return `• ${cant} x ${p.name} — ${money(precioConOferta(p).final * cant)}`;
     })
     .filter(Boolean);
+
   const nombre = document.getElementById("cartNombre").value.trim();
+  const entrega = document.getElementById("cartEntrega").value;
   const direccion = document.getElementById("cartDireccion").value.trim();
-  let texto = `¡Hola! Quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nTotal: ${money(totalPrecioCarrito())}`;
-  if (nombre) texto += `\n\nNombre: ${nombre}`;
-  if (direccion) texto += `\nDirección/retiro: ${direccion}`;
+  const pago = document.getElementById("cartPago").value;
+  const pagoLabel = { efectivo: "Efectivo", transferencia: "Transferencia", credito: "Tarjeta de crédito" }[pago];
+  const recargoPct = recargoActual();
+  const subtotal = totalSinRecargo();
+  const totalFinal = totalConRecargo();
+
+  let texto = `¡Hola! Quiero hacer este pedido:\n\n${lineas.join("\n")}\n\nSubtotal: ${money(subtotal)}`;
+  if (recargoPct > 0) {
+    texto += `\nRecargo tarjeta (${recargoPct}%): ${money(totalFinal - subtotal)}`;
+  }
+  texto += `\nTotal: ${money(totalFinal)}`;
+  texto += `\n\nEntrega: ${entrega === "retiro" ? "Retiro en el local" : "Envío"}`;
+  if (direccion) texto += `\n${entrega === "retiro" ? "Zona/aclaración" : "Dirección"}: ${direccion}`;
+  texto += `\nForma de pago: ${pagoLabel}`;
+  if (nombre) texto += `\nNombre: ${nombre}`;
+
   return encodeURIComponent(texto);
 }
 
@@ -432,6 +519,12 @@ function updateWhatsappHref() {
   document.getElementById("cartWhatsapp").href = numero
     ? `https://wa.me/${numero.replace(/[^0-9]/g, "")}?text=${mensajePedido()}`
     : "#";
+}
+
+function actualizarLabelEntrega() {
+  const entrega = document.getElementById("cartEntrega").value;
+  document.getElementById("cartDireccionLabel").textContent =
+    entrega === "retiro" ? "Zona o aclaración (opcional)" : "Dirección de envío";
 }
 
 function setupCartUI() {
@@ -446,15 +539,23 @@ function setupCartUI() {
   });
   document.getElementById("cartNombre").addEventListener("input", updateWhatsappHref);
   document.getElementById("cartDireccion").addEventListener("input", updateWhatsappHref);
+  document.getElementById("cartEntrega").addEventListener("change", () => {
+    actualizarLabelEntrega();
+    updateWhatsappHref();
+  });
+  document.getElementById("cartPago").addEventListener("change", renderCartPanel);
+  actualizarLabelEntrega();
 }
 
 async function init() {
-  const [site, products] = await Promise.all([
+  const [site, products, categorias] = await Promise.all([
     loadJSON("site.json"),
     loadJSON("products.json"),
+    loadJSON("categorias.json"),
   ]);
 
   SITE = site;
+  CATEGORIES = categorias || [];
   applyPalette(site && site.colores);
   renderBunting();
   window.addEventListener("resize", renderBunting);
