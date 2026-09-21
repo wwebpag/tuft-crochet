@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-.admin-wrap { max-width: 640px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+.admin-wrap { max-width: 640px; margin: 0 auto; padding: 0 1.25rem 5rem; }
 .panel {
 background: var(--paper); color: var(--ink);
 border-radius: 8px; padding: 1.5rem; margin-bottom: 1.75rem;
@@ -71,6 +71,17 @@ input[type=color] {
 width: 40px; height: 40px; border: none; border-radius: 50%; padding: 0; cursor: pointer;
 background: none;
 }
+/* ---------- Pestañas ---------- */
+.admin-tabs {
+display: flex; gap: 0.4rem; max-width: 640px; margin: 0 auto 1.5rem;
+padding: 0 1.25rem; flex-wrap: wrap;
+}
+.admin-tab {
+font-family: var(--mono); font-size: 0.78rem; font-weight: 700;
+background: rgba(246,241,230,0.12); color: var(--paper); border: none;
+border-radius: 999px; padding: 0.55rem 1rem; cursor: pointer; margin-top: 0;
+}
+.admin-tab.active { background: var(--rust); color: #fff; }
 /* ---------- Materias primas ---------- */
 .material-row {
 display: flex; gap: 0.8rem; align-items: center; padding: 0.6rem 0;
@@ -84,6 +95,10 @@ border-bottom: 1px solid #e6dfcd;
 display: grid; grid-template-columns: 1fr 90px 100px; gap: 0.6rem; align-items: end; margin-top: 0.9rem;
 }
 .material-add-row label { margin: 0 0 0.3rem; }
+.material-edit-fields {
+display: grid; grid-template-columns: 1fr 90px 90px; gap: 0.5rem; flex: 1;
+}
+.material-edit-fields input, .material-edit-fields select { margin: 0; }
 /* ---------- Materiales usados en el producto ---------- */
 .mu-row {
 display: grid; grid-template-columns: 1fr 90px 32px; gap: 0.6rem; align-items: center; margin-bottom: 0.5rem;
@@ -97,27 +112,37 @@ background: #efe8d5; border-radius: 6px; padding: 0.8rem 1rem; margin-top: 1rem;
 font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 }
 .calc-box .final { font-size: 1.15rem; font-weight: 700; color: var(--ink); }
-.admin-tabs {
-  display: flex; gap: 0.4rem; max-width: 640px; margin: 0 auto 1.5rem;
-  padding: 0 1.25rem; flex-wrap: wrap;
+/* ---------- Categorías ---------- */
+.category-row {
+display: flex; gap: 0.8rem; align-items: center; padding: 0.7rem 0;
+border-bottom: 1px solid #e6dfcd; flex-wrap: wrap;
 }
-.admin-tab {
-  font-family: var(--mono); font-size: 0.78rem; font-weight: 700;
-  background: rgba(246,241,230,0.12); color: var(--paper); border: none;
-  border-radius: 999px; padding: 0.55rem 1rem; cursor: pointer; margin-top: 0;
+.category-row .info { flex: 1; min-width: 140px; }
+.category-row .info b { display: block; font-size: 0.9rem; }
+.category-row .oferta-fields {
+display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem;
 }
-.admin-tab.active { background: var(--rust); color: #fff; }
-
-.material-edit-fields {
-  display: grid;
-  grid-template-columns: 1fr 90px 90px;
-  gap: 0.5rem;
-  flex: 1;
+.category-row .oferta-fields input[type=number] { width: 65px; padding: 0.35rem 0.4rem; }
+.category-row button { margin-top: 0; padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+.category-add-row { display: flex; gap: 0.6rem; margin-top: 1rem; }
+.category-add-row input { flex: 1; }
+.category-add-row button { margin-top: 0; }
+/* ---------- Ofertas de producto / tienda ---------- */
+.oferta-toggle-row {
+display: flex; align-items: center; gap: 0.7rem; margin-top: 0.9rem;
 }
-.material-edit-fields input,
-.material-edit-fields select {
-  margin: 0;
+.oferta-toggle-row input[type=checkbox] { width: auto; margin: 0; }
+.oferta-toggle-row input[type=number] { width: 90px; margin: 0; }
+.oferta-toggle-row label { margin: 0; }
+/* ---------- Color de letras ---------- */
+.color-tool {
+display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;
 }
+.color-tool input[type=color] { width: 30px; height: 30px; }
+.color-tool button {
+margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
+}
+.color-tool .hint-inline { font-size: 0.72rem; color: #6b6355; font-family: var(--body); }
 </style>
 </head>
 <body>
@@ -132,11 +157,12 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 
 <div class="admin-tabs" id="adminTabs" hidden>
 <button class="admin-tab active" data-tab="siteInfoPanel">Datos de tienda</button>
+<button class="admin-tab" data-tab="categoriesPanel">Categorías</button>
 <button class="admin-tab" data-tab="materialsPanel">Materia prima</button>
 <button class="admin-tab" data-tab="addPanel">Agregar producto</button>
 <button class="admin-tab" data-tab="listPanel">Productos cargados</button>
 </div>
-  
+
 <div class="admin-wrap">
 
 <div class="panel" id="loginGate">
@@ -149,7 +175,7 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 </div>
 
 <div class="panel" id="siteInfoPanel" hidden>
-<h2>2. Datos de tu tienda</h2>
+<h2>Datos de tu tienda</h2>
 <label for="siteName">Nombre de la tienda</label>
 <input type="text" id="siteNameInput">
 <label for="siteTagline">Frase corta</label>
@@ -160,7 +186,18 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 <input type="text" id="siteInstagram" placeholder="@mitienda">
 <label for="siteRedondeo">Redondeo de precios ($)</label>
 <input type="number" id="siteRedondeo" min="1" step="1" placeholder="ej: 100">
-<label>Colores de tu tienda</label>
+<label for="siteRecargo">Recargo por pagar con tarjeta de crédito (%)</label>
+<input type="number" id="siteRecargo" min="0" step="1" placeholder="ej: 10">
+
+<label>Oferta en toda la tienda</label>
+<div class="oferta-toggle-row">
+<input type="checkbox" id="siteOfertaActiva">
+<label for="siteOfertaActiva" style="margin:0;">Activar</label>
+<input type="number" id="siteOfertaPorcentaje" min="1" max="90" step="1" placeholder="%">
+<span class="hint" style="margin:0;">% de descuento</span>
+</div>
+
+<label style="margin-top:1.2rem;">Colores de tu tienda</label>
 <p class="hint" style="margin:0 0 0.4rem;">Tocá la que más te guste. Se aplica en toda la página.</p>
 <div class="palette-grid" id="paletteGrid"></div>
 <p class="hint" id="advancedColorToggle" style="cursor:pointer; text-decoration:underline; margin-top:0.9rem;">elegir colores a mano</p>
@@ -178,9 +215,20 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 <p class="status" id="siteStatus"></p>
 </div>
 
+<div class="panel" id="categoriesPanel" hidden>
+<h2>Categorías</h2>
+<p class="hint">Creá, editá o borrá las categorías de tu tienda. Cada una puede tener su propia oferta.</p>
+<div id="categoryList"></div>
+<div class="category-add-row">
+<input type="text" id="cNombre" placeholder="Nueva categoría, ej: Amigurumis">
+<button id="btnAddCategory">Agregar</button>
+</div>
+<p class="status" id="categoryStatus"></p>
+</div>
+
 <div class="panel" id="materialsPanel" hidden>
-<h2>3. Materias primas</h2>
-<p class="hint">Cargá acá lo que usás para armar tus productos (hilo, relleno, trapillo, ojitos, etc.) con su precio, para que el sistema calcule el costo solo.</p>
+<h2>Materia prima</h2>
+<p class="hint">Cargá acá lo que usás para armar tus productos (hilo, relleno, trapillo, ojitos, etc.) con su precio, para que el sistema calcule el costo solo. Si editás un precio, los productos que la usan se actualizan solos.</p>
 <div id="materialList"></div>
 <div class="material-add-row">
 <div>
@@ -208,13 +256,27 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 </div>
 
 <div class="panel" id="addPanel" hidden>
-<h2 id="addPanelTitle">4. Agregar producto</h2>
+<h2 id="addPanelTitle">Agregar producto</h2>
 <label for="pName">Nombre</label>
 <input type="text" id="pName" placeholder="ej: Amigurumi conejito">
-<label for="pCategory">Categoría (opcional)</label>
-<input type="text" id="pCategory" placeholder="ej: Amigurumis">
+<div class="color-tool">
+<input type="color" id="pNameColor" value="#201d18">
+<button type="button" class="secondary" data-color-apply="pName" data-mode="selection">Colorear selección</button>
+<button type="button" class="secondary" data-color-apply="pName" data-mode="all">Colorear todo</button>
+<span class="hint-inline">Seleccioná una palabra o frase del nombre antes de tocar "selección"</span>
+</div>
+
+<label for="pCategory">Categoría</label>
+<select id="pCategory"></select>
+
 <label for="pDescription">Descripción (opcional)</label>
 <textarea id="pDescription" placeholder="Tamaño, detalles, tiempo de entrega..."></textarea>
+<div class="color-tool">
+<input type="color" id="pDescColor" value="#201d18">
+<button type="button" class="secondary" data-color-apply="pDescription" data-mode="selection">Colorear selección</button>
+<button type="button" class="secondary" data-color-apply="pDescription" data-mode="all">Colorear todo</button>
+<span class="hint-inline">Marcá una palabra o frase de la descripción antes de tocar "selección"</span>
+</div>
 
 <label>Materias primas usadas</label>
 <p class="hint" style="margin:0 0 0.4rem;">Elegí qué usa este producto y cuánto.</p>
@@ -228,6 +290,14 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 <input type="number" id="pRedondeo" min="1" step="1" placeholder="usa el general de la tienda">
 
 <div class="calc-box" id="calcBox"></div>
+
+<label>Oferta para este producto</label>
+<div class="oferta-toggle-row">
+<input type="checkbox" id="pOfertaActiva">
+<label for="pOfertaActiva" style="margin:0;">Activar</label>
+<input type="number" id="pOfertaPorcentaje" min="1" max="90" step="1" placeholder="%">
+<span class="hint" style="margin:0;">% de descuento (pisa a la de categoría/tienda)</span>
+</div>
 
 <div id="currentImageNote" class="hint" style="display:none; margin-top:0.8rem;"></div>
 <label for="pImage">Foto (dejar vacío para no cambiarla; recomendado &lt; 5 MB)</label>
@@ -244,7 +314,7 @@ font-family: var(--mono); font-size: 0.82rem; line-height: 1.6;
 </div>
 
 <div class="panel" id="listPanel" hidden>
-<h2>5. Tus productos</h2>
+<h2>Productos cargados</h2>
 <p class="hint">Tocá "Borrar" para sacar un producto de la tienda.</p>
 <div id="productList"></div>
 </div>
