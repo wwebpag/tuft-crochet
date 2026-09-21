@@ -111,8 +111,6 @@ async function ghGetFile(path) {
 
 async function ghPutFile(path, base64Content, message, sha) {
   const cfg = getConfig();
-  // No forzamos "branch" acá: si no se especifica, la API usa la rama por
-  // defecto del repo (puede ser "main" o "master" según cómo lo creó GitHub).
   const body = { message, content: base64Content };
   if (sha) body.sha = sha;
   const res = await fetch(apiUrl(path), {
@@ -152,6 +150,17 @@ function money(n) {
   return "$" + Math.round(Number(n) || 0).toLocaleString("es-AR");
 }
 
+// ---------- Pestañas ----------
+
+function showTab(panelId) {
+  ["siteInfoPanel", "categoriesPanel", "materialsPanel", "addPanel", "listPanel"].forEach((id) => {
+    document.getElementById(id).hidden = id !== panelId;
+  });
+  document.querySelectorAll(".admin-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === panelId);
+  });
+}
+
 // ---------- Conexión ----------
 
 async function testConnection() {
@@ -179,27 +188,15 @@ async function testConnection() {
     document.getElementById("loginGate").hidden = true;
     document.getElementById("liveLink").innerHTML =
       `Tu tienda: <a href="https://${REPO_OWNER}.github.io/${REPO_NAME}/" target="_blank" style="color:var(--mustard)">https://${REPO_OWNER}.github.io/${REPO_NAME}/</a>`;
-    revealPanels();
+    document.getElementById("adminTabs").hidden = false;
+    showTab("siteInfoPanel");
     await loadSite();
+    await loadCategories();
     await loadMaterials();
     await loadProducts();
   } catch (e) {
     setStatus(statusEl, e.message, false);
   }
-}
-
-function revealPanels() {
-  document.getElementById("adminTabs").hidden = false;
-  showTab("siteInfoPanel");
-}
-
-function showTab(panelId) {
-  ["siteInfoPanel", "materialsPanel", "addPanel", "listPanel"].forEach((id) => {
-    document.getElementById(id).hidden = id !== panelId;
-  });
-  document.querySelectorAll(".admin-tab").forEach((btn) => {
-    btn.classList.toggle("active", btn.dataset.tab === panelId);
-  });
 }
 
 // ---------- Datos de la tienda ----------
@@ -219,6 +216,9 @@ async function loadSite() {
   document.getElementById("siteWhatsapp").value = site.whatsapp || "";
   document.getElementById("siteInstagram").value = site.instagram || "";
   document.getElementById("siteRedondeo").value = site.redondeo || 100;
+  document.getElementById("siteRecargo").value = site.recargoCredito || 0;
+  document.getElementById("siteOfertaActiva").checked = !!(site.ofertaGlobal && site.ofertaGlobal.activa);
+  document.getElementById("siteOfertaPorcentaje").value = (site.ofertaGlobal && site.ofertaGlobal.porcentaje) || "";
   siteRedondeoGeneral = Number(site.redondeo) || 100;
 
   if (site.colores && Array.isArray(site.colores.acentos) && site.colores.acentos.length === 5) {
@@ -239,6 +239,11 @@ async function saveSite() {
       whatsapp: document.getElementById("siteWhatsapp").value.trim(),
       instagram: document.getElementById("siteInstagram").value.trim(),
       redondeo: Number(document.getElementById("siteRedondeo").value) || 100,
+      recargoCredito: Number(document.getElementById("siteRecargo").value) || 0,
+      ofertaGlobal: {
+        activa: document.getElementById("siteOfertaActiva").checked,
+        porcentaje: Number(document.getElementById("siteOfertaPorcentaje").value) || 0,
+      },
       colores: currentColores,
     };
     if (existing) {
@@ -262,14 +267,177 @@ async function saveSite() {
   }
 }
 
+// ---------- Categorías ----------
+
+let categoriesCache = [];
+let editingCategoryId = null;
+
+async function loadCategories() {
+  const file = await ghGetFile("categorias.json");
+  categoriesCache = file ? JSON.parse(file.content) : [];
+  renderCategoryList();
+  renderCategorySelect();
+}
+
+async function saveCategories(cats, message) {
+  const existing = await ghGetFile("categorias.json");
+  await ghPutFile(
+    "categorias.json",
+    b64EncodeUnicode(JSON.stringify(cats, null, 2)),
+    message,
+    existing ? existing.sha : undefined
+  );
+}
+
+function renderCategorySelect() {
+  const sel = document.getElementById("pCategory");
+  const current = sel.value;
+  sel.innerHTML = categoriesCache.map((c) => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+  if (current) sel.value = current;
+}
+
+function renderCategoryList() {
+  const listEl = document.getElementById("categoryList");
+  listEl.innerHTML = "";
+  if (categoriesCache.length === 0) {
+    listEl.innerHTML = "<p class='hint'>Todavía no cargaste categorías.</p>";
+    return;
+  }
+  categoriesCache.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "category-row";
+    if (editingCategoryId === c.id) {
+      row.innerHTML = `
+        <input type="text" value="${c.nombre}" data-edit="nombre" style="flex:1; min-width:120px;">
+        <div class="oferta-fields">
+          <input type="checkbox" data-edit="activa" ${c.oferta && c.oferta.activa ? "checked" : ""}>
+          <input type="number" min="1" max="90" data-edit="porcentaje" value="${(c.oferta && c.oferta.porcentaje) || ""}" placeholder="%">
+        </div>
+        <button data-action="guardar" data-id="${c.id}">Guardar</button>
+        <button class="secondary" data-action="cancelar">Cancelar</button>
+      `;
+    } else {
+      const ofertaTxt = c.oferta && c.oferta.activa && c.oferta.porcentaje ? ` · Oferta ${c.oferta.porcentaje}%` : "";
+      row.innerHTML = `
+        <div class="info"><b>${c.nombre}</b><span>${ofertaTxt}</span></div>
+        <button class="secondary" data-action="editar" data-id="${c.id}">Editar</button>
+        <button class="danger" data-action="borrar" data-id="${c.id}">Borrar</button>
+      `;
+    }
+    listEl.appendChild(row);
+  });
+
+  listEl.querySelectorAll('[data-action="editar"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingCategoryId = btn.dataset.id;
+      renderCategoryList();
+    });
+  });
+  listEl.querySelectorAll('[data-action="cancelar"]').forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingCategoryId = null;
+      renderCategoryList();
+    });
+  });
+  listEl.querySelectorAll('[data-action="borrar"]').forEach((btn) => {
+    btn.addEventListener("click", () => deleteCategory(btn.dataset.id));
+  });
+  listEl.querySelectorAll('[data-action="guardar"]').forEach((btn) => {
+    btn.addEventListener("click", () => saveCategoryEdit(btn.dataset.id));
+  });
+}
+
+async function addCategory() {
+  const statusEl = document.getElementById("categoryStatus");
+  const nombre = document.getElementById("cNombre").value.trim();
+  if (!nombre) {
+    setStatus(statusEl, "Ponele un nombre a la categoría.", false);
+    return;
+  }
+  setStatus(statusEl, "Guardando...", true);
+  try {
+    categoriesCache = [...categoriesCache, { id: Date.now().toString(36), nombre, oferta: { activa: false, porcentaje: 0 } }];
+    await saveCategories(categoriesCache, `Agregar categoría: ${nombre}`);
+    document.getElementById("cNombre").value = "";
+    renderCategoryList();
+    renderCategorySelect();
+    setStatus(statusEl, "Guardado ✓", true);
+  } catch (e) {
+    setStatus(statusEl, e.message, false);
+  }
+}
+
+async function saveCategoryEdit(id) {
+  const row = [...document.querySelectorAll(".category-row")].find((r) =>
+    r.querySelector(`[data-action="guardar"][data-id="${id}"]`)
+  );
+  const nombre = row.querySelector('[data-edit="nombre"]').value.trim();
+  const activa = row.querySelector('[data-edit="activa"]').checked;
+  const porcentaje = Number(row.querySelector('[data-edit="porcentaje"]').value) || 0;
+  if (!nombre) {
+    alert("Ponele un nombre a la categoría.");
+    return;
+  }
+  const statusEl = document.getElementById("categoryStatus");
+  setStatus(statusEl, "Guardando...", true);
+  try {
+    const anterior = categoriesCache.find((c) => c.id === id);
+    const nombreAnterior = anterior ? anterior.nombre : null;
+    categoriesCache = categoriesCache.map((c) => (c.id === id ? { ...c, nombre, oferta: { activa, porcentaje } } : c));
+    await saveCategories(categoriesCache, `Editar categoría: ${nombre}`);
+    editingCategoryId = null;
+    renderCategoryList();
+    renderCategorySelect();
+    if (nombreAnterior && nombreAnterior !== nombre) {
+      await renombrarCategoriaEnProductos(nombreAnterior, nombre);
+    }
+    await recalcularProductosGuardados();
+    setStatus(statusEl, "Guardado ✓", true);
+  } catch (e) {
+    setStatus(statusEl, e.message, false);
+  }
+}
+
+async function renombrarCategoriaEnProductos(nombreAnterior, nombreNuevo) {
+  const existing = await ghGetFile("products.json");
+  if (!existing) return;
+  const products = JSON.parse(existing.content);
+  let changed = false;
+  products.forEach((p) => {
+    if (p.category === nombreAnterior) {
+      p.category = nombreNuevo;
+      changed = true;
+    }
+  });
+  if (changed) {
+    await ghPutFile(
+      "products.json",
+      b64EncodeUnicode(JSON.stringify(products, null, 2)),
+      "Actualizar categoría en productos",
+      existing.sha
+    );
+    productsCache = products;
+  }
+}
+
+async function deleteCategory(id) {
+  if (!confirm("¿Borrar esta categoría? Los productos que la tenían quedan sin categoría.")) return;
+  try {
+    categoriesCache = categoriesCache.filter((c) => c.id !== id);
+    await saveCategories(categoriesCache, "Borrar categoría");
+    renderCategoryList();
+    renderCategorySelect();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
 // ---------- Materias primas ----------
 
 let materialsCache = [];
 let editingMaterialId = null;
 
 async function loadMaterials() {
-  const listEl = document.getElementById("materialList");
-  listEl.innerHTML = "Cargando...";
   const file = await ghGetFile("materiales.json");
   materialsCache = file ? JSON.parse(file.content) : [];
   renderMaterialList();
@@ -329,44 +497,6 @@ function renderMaterialList() {
   });
 }
 
-async function saveMaterialEdit(id) {
-  const row = [...document.querySelectorAll(".material-row")].find((r) =>
-    r.querySelector(`[data-action="guardar"][data-id="${id}"]`)
-  );
-  const nombre = row.querySelector('[data-edit="nombre"]').value.trim();
-  const unidad = row.querySelector('[data-edit="unidad"]').value;
-  const precioUnitario = Number(row.querySelector('[data-edit="precio"]').value.replace(",", "."));
-
-  if (!nombre) {
-    alert("Ponele un nombre a la materia prima.");
-    return;
-  }
-  if (!precioUnitario || precioUnitario <= 0) {
-    alert("Ingresá un precio válido.");
-    return;
-  }
-
-  const statusEl = document.getElementById("materialStatus");
-  setStatus(statusEl, "Guardando...", true);
-  try {
-    materialsCache = materialsCache.map((m) => (m.id === id ? { ...m, nombre, unidad, precioUnitario } : m));
-    await saveMaterials(materialsCache, `Editar materia prima: ${nombre}`);
-    editingMaterialId = null;
-    renderMaterialList();
-    renderMuOptions();
-    recalcular();
-    setStatus(statusEl, "Actualizando precios de productos...", true);
-    const huboCambios = await recalcularProductosGuardados();
-    setStatus(
-      statusEl,
-      huboCambios ? "Guardado ✓ — los productos que la usan ya tienen el precio actualizado" : "Guardado ✓",
-      true
-    );
-  } catch (e) {
-    setStatus(statusEl, e.message, false);
-  }
-}
-
 async function saveMaterials(materials, message) {
   const existing = await ghGetFile("materiales.json");
   await ghPutFile(
@@ -409,6 +539,44 @@ async function addMaterial() {
   }
 }
 
+async function saveMaterialEdit(id) {
+  const row = [...document.querySelectorAll(".material-row")].find((r) =>
+    r.querySelector(`[data-action="guardar"][data-id="${id}"]`)
+  );
+  const nombre = row.querySelector('[data-edit="nombre"]').value.trim();
+  const unidad = row.querySelector('[data-edit="unidad"]').value;
+  const precioUnitario = Number(row.querySelector('[data-edit="precio"]').value.replace(",", "."));
+
+  if (!nombre) {
+    alert("Ponele un nombre a la materia prima.");
+    return;
+  }
+  if (!precioUnitario || precioUnitario <= 0) {
+    alert("Ingresá un precio válido.");
+    return;
+  }
+
+  const statusEl = document.getElementById("materialStatus");
+  setStatus(statusEl, "Guardando...", true);
+  try {
+    materialsCache = materialsCache.map((m) => (m.id === id ? { ...m, nombre, unidad, precioUnitario } : m));
+    await saveMaterials(materialsCache, `Editar materia prima: ${nombre}`);
+    editingMaterialId = null;
+    renderMaterialList();
+    renderMuOptions();
+    recalcular();
+    setStatus(statusEl, "Actualizando precios de productos...", true);
+    const huboCambios = await recalcularProductosGuardados();
+    setStatus(
+      statusEl,
+      huboCambios ? "Guardado ✓ — los productos que la usan ya tienen el precio actualizado" : "Guardado ✓",
+      true
+    );
+  } catch (e) {
+    setStatus(statusEl, e.message, false);
+  }
+}
+
 async function deleteMaterial(id) {
   if (!confirm("¿Borrar esta materia prima? Si algún producto la usa, va a quedar sin ese costo.")) return;
   try {
@@ -423,10 +591,6 @@ async function deleteMaterial(id) {
   }
 }
 
-// Recalcula el precio de TODOS los productos guardados en base a los
-// precios actuales de materiales primas (se llama después de agregar,
-// editar o borrar una materia prima, y después de guardar la config
-// general por si cambió el redondeo).
 async function recalcularProductosGuardados() {
   const existing = await ghGetFile("products.json");
   if (!existing) return false;
@@ -458,10 +622,9 @@ async function recalcularProductosGuardados() {
 
 // ---------- Materiales usados en el producto (filas dinámicas) ----------
 
-let muRows = []; // [{ materialId, cantidad }]
+let muRows = [];
 
 function renderMuOptions() {
-  // refresca los <select> de filas ya agregadas si cambió la lista de materiales
   document.querySelectorAll(".mu-row select").forEach((sel) => {
     const current = sel.value;
     sel.innerHTML = materialsCache
@@ -475,7 +638,7 @@ function renderMuList() {
   const cont = document.getElementById("muList");
   cont.innerHTML = "";
   if (materialsCache.length === 0) {
-    cont.innerHTML = "<p class='hint'>Primero cargá materias primas más arriba.</p>";
+    cont.innerHTML = "<p class='hint'>Primero cargá materias primas en la otra pestaña.</p>";
     return;
   }
   muRows.forEach((row, idx) => {
@@ -548,8 +711,29 @@ function recalcular() {
   box.innerHTML = `
     Costo de materiales: ${money(costoMateriales)}<br>
     + ${manoObra}% de mano de obra: ${money(costoConManoObra)}<br>
-    <span class="final">Precio final: ${money(precioFinal)}</span>
+    <span class="final">Precio de lista: ${money(precioFinal)}</span>
   `;
+}
+
+// ---------- Color de letras (nombre / descripción) ----------
+
+function aplicarColorTexto(fieldId, colorInputId, mode) {
+  const el = document.getElementById(fieldId);
+  const color = document.getElementById(colorInputId).value;
+  if (mode === "all") {
+    el.value = `<span style="color:${color}">${el.value}</span>`;
+    return;
+  }
+  const start = el.selectionStart;
+  const end = el.selectionEnd;
+  if (start === end) {
+    alert("Primero seleccioná (marcá con el dedo/mouse) la palabra o frase que querés colorear.");
+    return;
+  }
+  const before = el.value.slice(0, start);
+  const selected = el.value.slice(start, end);
+  const after = el.value.slice(end);
+  el.value = `${before}<span style="color:${color}">${selected}</span>${after}`;
 }
 
 // ---------- Productos ----------
@@ -568,11 +752,12 @@ async function loadProducts() {
     return;
   }
   productsCache.forEach((p) => {
+    const ofertaTxt = p.oferta && p.oferta.activa && p.oferta.porcentaje ? ` · Oferta ${p.oferta.porcentaje}%` : "";
     const row = document.createElement("div");
     row.className = "product-row";
     row.innerHTML = `
       ${p.images && p.images[0] ? `<img src="${p.images[0]}">` : ""}
-      <div class="info"><b>${p.name}</b><span>${money(p.price)}</span></div>
+      <div class="info"><b>${p.name}</b><span>${money(p.price)}${ofertaTxt}</span></div>
       <button class="secondary" data-action="edit" data-id="${p.id}">Editar</button>
       <button class="danger" data-action="delete" data-id="${p.id}">Borrar</button>
     `;
@@ -583,7 +768,7 @@ async function loadProducts() {
 }
 
 function startEdit(id) {
-   const p = productsCache.find((x) => x.id === id);
+  const p = productsCache.find((x) => x.id === id);
   if (!p) return;
   showTab("addPanel");
   editingId = id;
@@ -592,6 +777,8 @@ function startEdit(id) {
   document.getElementById("pDescription").value = p.description || "";
   document.getElementById("pManoObra").value = p.manoObraPorcentaje ?? 50;
   document.getElementById("pRedondeo").value = p.redondeo || "";
+  document.getElementById("pOfertaActiva").checked = !!(p.oferta && p.oferta.activa);
+  document.getElementById("pOfertaPorcentaje").value = (p.oferta && p.oferta.porcentaje) || "";
   document.getElementById("pVideoLink").value = p.videoLink || "";
   document.getElementById("pImage").value = "";
   document.getElementById("pVideo").value = "";
@@ -617,15 +804,17 @@ function startEdit(id) {
 function cancelEdit() {
   editingId = null;
   document.getElementById("pName").value = "";
-  document.getElementById("pCategory").value = "";
+  document.getElementById("pCategory").selectedIndex = 0;
   document.getElementById("pDescription").value = "";
   document.getElementById("pManoObra").value = 50;
   document.getElementById("pRedondeo").value = "";
+  document.getElementById("pOfertaActiva").checked = false;
+  document.getElementById("pOfertaPorcentaje").value = "";
   document.getElementById("pImage").value = "";
   document.getElementById("pVideo").value = "";
   document.getElementById("pVideoLink").value = "";
   document.getElementById("currentImageNote").style.display = "none";
-  document.getElementById("addPanelTitle").textContent = "Agregar producto";  
+  document.getElementById("addPanelTitle").textContent = "Agregar producto";
   document.getElementById("btnAddProduct").textContent = "Subir producto";
   document.getElementById("btnCancelEdit").hidden = true;
   document.getElementById("addStatus").textContent = "";
@@ -638,11 +827,13 @@ async function saveProduct() {
   const statusEl = document.getElementById("addStatus");
   const btn = document.getElementById("btnAddProduct");
   const name = document.getElementById("pName").value.trim();
-  const category = document.getElementById("pCategory").value.trim();
+  const category = document.getElementById("pCategory").value;
   const description = document.getElementById("pDescription").value.trim();
   const manoObraPorcentaje = Number(document.getElementById("pManoObra").value) || 0;
   const redondeoInput = document.getElementById("pRedondeo").value;
   const redondeo = redondeoInput ? Number(redondeoInput) : null;
+  const ofertaActiva = document.getElementById("pOfertaActiva").checked;
+  const ofertaPorcentaje = Number(document.getElementById("pOfertaPorcentaje").value) || 0;
   const imageFile = document.getElementById("pImage").files[0];
   const videoFile = document.getElementById("pVideo").files[0];
   const videoLink = document.getElementById("pVideoLink").value.trim();
@@ -690,6 +881,7 @@ async function saveProduct() {
       materiales: muRows.filter((r) => r.materialId),
       manoObraPorcentaje,
       redondeo,
+      oferta: { activa: ofertaActiva, porcentaje: ofertaPorcentaje },
       images: imagePath ? [imagePath] : [],
       video: videoPath,
       videoLink: videoLink || null,
@@ -758,17 +950,28 @@ function init() {
   });
   renderPaletteGrid();
 
+  document.querySelectorAll(".admin-tab").forEach((btn) => {
+    btn.addEventListener("click", () => showTab(btn.dataset.tab));
+  });
+
   document.getElementById("btnConnect").addEventListener("click", testConnection);
   document.getElementById("btnSaveSite").addEventListener("click", saveSite);
+  document.getElementById("btnAddCategory").addEventListener("click", addCategory);
   document.getElementById("btnAddMaterial").addEventListener("click", addMaterial);
   document.getElementById("btnAddMu").addEventListener("click", addMuRow);
   document.getElementById("pManoObra").addEventListener("input", recalcular);
   document.getElementById("pRedondeo").addEventListener("input", recalcular);
   document.getElementById("btnAddProduct").addEventListener("click", saveProduct);
   document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
-  document.querySelectorAll(".admin-tab").forEach((btn) => {
-  btn.addEventListener("click", () => showTab(btn.dataset.tab));
+
+  document.querySelectorAll("[data-color-apply]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const field = btn.dataset.colorApply;
+      const colorInputId = field === "pName" ? "pNameColor" : "pDescColor";
+      aplicarColorTexto(field, colorInputId, btn.dataset.mode);
+    });
   });
+
   renderMuList();
   recalcular();
 }
