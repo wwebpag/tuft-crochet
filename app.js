@@ -84,9 +84,11 @@ function renderBunting() {
 
 function renderSite(site) {
   if (!site) return;
-  document.title = site.nombre || "Tienda";
-  document.getElementById("siteName").textContent = site.nombre || "Mi Tienda";
-  document.getElementById("siteTagline").textContent = site.eslogan || "";
+  document.title = (site.nombre || "Tienda").replace(/<[^>]+>/g, "");
+  document.getElementById("siteName").innerHTML = site.nombre || "Mi Tienda";
+  document.getElementById("siteTagline").innerHTML = site.eslogan || "";
+  const footerEl = document.getElementById("footerText");
+  if (footerEl) footerEl.innerHTML = site.footerTexto || "Hecho con hilo y aguja 🧵";
   const row = document.getElementById("contactRow");
   row.innerHTML = "";
   if (site.whatsapp) {
