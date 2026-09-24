@@ -178,8 +178,31 @@ margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
 <h2>Datos de tu tienda</h2>
 <label for="siteName">Nombre de la tienda</label>
 <input type="text" id="siteNameInput">
+<div class="color-tool">
+<input type="color" id="siteNameColor" value="#201d18">
+<button type="button" class="secondary" data-color-apply="siteNameInput" data-mode="selection">Colorear selección</button>
+<button type="button" class="secondary" data-color-apply="siteNameInput" data-mode="all">Colorear todo</button>
+<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
+</div>
+
 <label for="siteTagline">Frase corta</label>
 <input type="text" id="siteTaglineInput">
+<div class="color-tool">
+<input type="color" id="siteTaglineColor" value="#201d18">
+<button type="button" class="secondary" data-color-apply="siteTaglineInput" data-mode="selection">Colorear selección</button>
+<button type="button" class="secondary" data-color-apply="siteTaglineInput" data-mode="all">Colorear todo</button>
+<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
+</div>
+
+<label for="siteFooter">Texto del pie de página</label>
+<input type="text" id="siteFooterInput" placeholder="Hecho con hilo y aguja 🧵">
+<div class="color-tool">
+<input type="color" id="siteFooterColor" value="#f6f1e6">
+<button type="button" class="secondary" data-color-apply="siteFooterInput" data-mode="selection">Colorear selección</button>
+<button type="button" class="secondary" data-color-apply="siteFooterInput" data-mode="all">Colorear todo</button>
+<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
+</div>
+
 <label for="siteWhatsapp">WhatsApp (con código de país, sin +)</label>
 <input type="text" id="siteWhatsapp" placeholder="5491122334455">
 <label for="siteInstagram">Instagram (usuario)</label>
