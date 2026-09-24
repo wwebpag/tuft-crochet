@@ -213,6 +213,7 @@ async function loadSite() {
   const site = JSON.parse(file.content);
   document.getElementById("siteNameInput").value = site.nombre || "";
   document.getElementById("siteTaglineInput").value = site.eslogan || "";
+  document.getElementById("siteFooterInput").value = site.footerTexto || "Hecho con hilo y aguja 🧵";
   document.getElementById("siteWhatsapp").value = site.whatsapp || "";
   document.getElementById("siteInstagram").value = site.instagram || "";
   document.getElementById("siteRedondeo").value = site.redondeo || 100;
@@ -236,6 +237,7 @@ async function saveSite() {
     const site = {
       nombre: document.getElementById("siteNameInput").value.trim(),
       eslogan: document.getElementById("siteTaglineInput").value.trim(),
+      footerTexto: document.getElementById("siteFooterInput").value.trim() || "Hecho con hilo y aguja 🧵",
       whatsapp: document.getElementById("siteWhatsapp").value.trim(),
       instagram: document.getElementById("siteInstagram").value.trim(),
       redondeo: Number(document.getElementById("siteRedondeo").value) || 100,
@@ -591,6 +593,8 @@ async function deleteMaterial(id) {
   }
 }
 
+// Recalcula el precio de TODOS los productos guardados en base a los
+// precios actuales de materias primas y al redondeo vigente.
 async function recalcularProductosGuardados() {
   const existing = await ghGetFile("products.json");
   if (!existing) return false;
@@ -622,7 +626,7 @@ async function recalcularProductosGuardados() {
 
 // ---------- Materiales usados en el producto (filas dinámicas) ----------
 
-let muRows = [];
+let muRows = []; // [{ materialId, cantidad }]
 
 function renderMuOptions() {
   document.querySelectorAll(".mu-row select").forEach((sel) => {
@@ -964,11 +968,17 @@ function init() {
   document.getElementById("btnAddProduct").addEventListener("click", saveProduct);
   document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
 
+  const COLOR_FIELD_MAP = {
+    pName: "pNameColor",
+    pDescription: "pDescColor",
+    siteNameInput: "siteNameColor",
+    siteTaglineInput: "siteTaglineColor",
+    siteFooterInput: "siteFooterColor",
+  };
   document.querySelectorAll("[data-color-apply]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const field = btn.dataset.colorApply;
-      const colorInputId = field === "pName" ? "pNameColor" : "pDescColor";
-      aplicarColorTexto(field, colorInputId, btn.dataset.mode);
+      aplicarColorTexto(field, COLOR_FIELD_MAP[field], btn.dataset.mode);
     });
   });
 
