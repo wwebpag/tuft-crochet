@@ -10,12 +10,21 @@
 </head>
 <body>
 <div class="bunting" id="bunting"></div>
+
+<div class="top-right-bar">
+<button class="cart-fab" id="cartFab">
+🧺 <span id="cartCount">0</span>
+</button>
+<a href="admin.html" class="admin-link" aria-label="Panel del administrador">·</a>
+</div>
+
 <header class="stall">
 <div class="stall-inner">
 <p class="eyebrow">FERIA · PUESTO ABIERTO</p>
 <h1 id="siteName">Mi Tienda</h1>
 <p id="siteTagline" class="tagline">Ropa con onda, directo de la feria</p>
 <div class="contact-row" id="contactRow"></div>
+<p id="ofertaGlobalBanner" class="oferta-banner" hidden></p>
 </div>
 </header>
 <main id="main">
@@ -37,15 +46,8 @@
 <div id="lines"></div>
 </main>
 <footer class="foot">
-<p>Hecho con hilo y aguja 🧵</p>
+<p id="footerText">Hecho con hilo y aguja 🧵</p>
 </footer>
-
-<div class="top-right-bar">
-<button class="cart-fab" id="cartFab">
-🧺 <span id="cartCount">0</span>
-</button>
-<a href="admin.html" class="admin-link" aria-label="Panel del administrador">·</a>
-</div>
 
 <div class="cart-overlay" id="cartOverlay" hidden>
 <div class="cart-panel">
@@ -57,8 +59,24 @@
 <div class="cart-panel-footer">
 <label for="cartNombre" class="cart-field-label">Tu nombre</label>
 <input type="text" id="cartNombre" placeholder="¿Cómo te llamamos?">
-<label for="cartDireccion" class="cart-field-label">Dirección o dónde retirás</label>
-<input type="text" id="cartDireccion" placeholder="Dirección de entrega o punto de retiro">
+
+<label for="cartEntrega" class="cart-field-label">Entrega</label>
+<select id="cartEntrega">
+<option value="envio">Envío</option>
+<option value="retiro">Retiro en el local</option>
+</select>
+
+<label for="cartDireccion" class="cart-field-label" id="cartDireccionLabel">Dirección de envío</label>
+<input type="text" id="cartDireccion" placeholder="Dirección de entrega">
+
+<label for="cartPago" class="cart-field-label">Forma de pago</label>
+<select id="cartPago">
+<option value="efectivo">Efectivo</option>
+<option value="transferencia">Transferencia</option>
+<option value="credito">Tarjeta de crédito</option>
+</select>
+<p id="recargoNota" class="cart-recargo-nota" hidden></p>
+
 <div class="cart-total"><span>Total</span><span id="cartTotal">$0</span></div>
 <a href="#" id="cartWhatsapp" class="contact-btn cart-checkout" target="_blank" rel="noopener">Hacer pedido por WhatsApp</a>
 </div>
