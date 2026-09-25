@@ -7,8 +7,8 @@
   "redondeo": 1000,
   "recargoCredito": 0,
   "ofertaGlobal": {
-    "activa": false,
-    "porcentaje": 0
+    "activa": true,
+    "porcentaje": 15
   },
   "colores": {
     "fondo": "#f5efe4",
