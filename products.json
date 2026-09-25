@@ -29,7 +29,11 @@
       "assets/1789754637498-whatsapp-image-2026-09-18-at-14.34.40--1-.jpeg"
     ],
     "video": null,
-    "videoLink": null
+    "videoLink": null,
+    "oferta": {
+      "activa": false,
+      "porcentaje": 0
+    }
   },
   {
     "id": "mu79dxfe",
