@@ -540,9 +540,10 @@ async function init() {
     loadJSON("categorias.json"),
   ]);
 
-  SITE = site;
+ SITE = site;
   CATEGORIES = categorias || [];
   applyPalette(site && site.colores);
+  document.body.classList.add("ready");
   renderBunting();
   window.addEventListener("resize", renderBunting);
   renderSite(site);
