@@ -134,15 +134,6 @@ display: flex; align-items: center; gap: 0.7rem; margin-top: 0.9rem;
 .oferta-toggle-row input[type=checkbox] { width: auto; margin: 0; }
 .oferta-toggle-row input[type=number] { width: 90px; margin: 0; }
 .oferta-toggle-row label { margin: 0; }
-/* ---------- Color de letras ---------- */
-.color-tool {
-display: flex; align-items: center; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;
-}
-.color-tool input[type=color] { width: 30px; height: 30px; }
-.color-tool button {
-margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
-}
-.color-tool .hint-inline { font-size: 0.72rem; color: #6b6355; font-family: var(--body); }
 </style>
 </head>
 <body>
@@ -178,30 +169,12 @@ margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
 <h2>Datos de tu tienda</h2>
 <label for="siteName">Nombre de la tienda</label>
 <input type="text" id="siteNameInput">
-<div class="color-tool">
-<input type="color" id="siteNameColor" value="#201d18">
-<button type="button" class="secondary" data-color-apply="siteNameInput" data-mode="selection">Colorear selección</button>
-<button type="button" class="secondary" data-color-apply="siteNameInput" data-mode="all">Colorear todo</button>
-<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
-</div>
 
 <label for="siteTagline">Frase corta</label>
 <input type="text" id="siteTaglineInput">
-<div class="color-tool">
-<input type="color" id="siteTaglineColor" value="#201d18">
-<button type="button" class="secondary" data-color-apply="siteTaglineInput" data-mode="selection">Colorear selección</button>
-<button type="button" class="secondary" data-color-apply="siteTaglineInput" data-mode="all">Colorear todo</button>
-<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
-</div>
 
 <label for="siteFooter">Texto del pie de página</label>
 <input type="text" id="siteFooterInput" placeholder="Hecho con hilo y aguja 🧵">
-<div class="color-tool">
-<input type="color" id="siteFooterColor" value="#f6f1e6">
-<button type="button" class="secondary" data-color-apply="siteFooterInput" data-mode="selection">Colorear selección</button>
-<button type="button" class="secondary" data-color-apply="siteFooterInput" data-mode="all">Colorear todo</button>
-<span class="hint-inline">Marcá una palabra o frase antes de tocar "selección"</span>
-</div>
 
 <label for="siteWhatsapp">WhatsApp (con código de país, sin +)</label>
 <input type="text" id="siteWhatsapp" placeholder="5491122334455">
@@ -221,17 +194,18 @@ margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
 </div>
 
 <label style="margin-top:1.2rem;">Colores de tu tienda</label>
-<p class="hint" style="margin:0 0 0.4rem;">Tocá la que más te guste. Se aplica en toda la página.</p>
+<p class="hint" style="margin:0 0 0.4rem;">Tocá la que más te guste. Se aplica en toda la página, incluido este panel.</p>
 <div class="palette-grid" id="paletteGrid"></div>
 <p class="hint" id="advancedColorToggle" style="cursor:pointer; text-decoration:underline; margin-top:0.9rem;">elegir colores a mano</p>
 <div id="advancedColorFields" hidden>
+<p class="hint" style="margin:0 0 0.6rem;">Cada color de acá también pinta un texto puntual de la tienda.</p>
 <div class="color-row">
 <label>Fondo<input type="color" id="colorFondo"></label>
-<label>Acento 1<input type="color" id="colorAcento1"></label>
-<label>Acento 2<input type="color" id="colorAcento2"></label>
-<label>Acento 3<input type="color" id="colorAcento3"></label>
-<label>Acento 4<input type="color" id="colorAcento4"></label>
-<label>Acento 5<input type="color" id="colorAcento5"></label>
+<label>Título<input type="color" id="colorAcento1"></label>
+<label>Subtítulo<input type="color" id="colorAcento2"></label>
+<label>Nombre de producto<input type="color" id="colorAcento3"></label>
+<label>Descripción<input type="color" id="colorAcento4"></label>
+<label>Pie de página<input type="color" id="colorAcento5"></label>
 </div>
 </div>
 <button id="btnSaveSite">Guardar datos</button>
@@ -282,24 +256,12 @@ margin-top: 0; padding: 0.35rem 0.7rem; font-size: 0.72rem;
 <h2 id="addPanelTitle">Agregar producto</h2>
 <label for="pName">Nombre</label>
 <input type="text" id="pName" placeholder="ej: Amigurumi conejito">
-<div class="color-tool">
-<input type="color" id="pNameColor" value="#201d18">
-<button type="button" class="secondary" data-color-apply="pName" data-mode="selection">Colorear selección</button>
-<button type="button" class="secondary" data-color-apply="pName" data-mode="all">Colorear todo</button>
-<span class="hint-inline">Seleccioná una palabra o frase del nombre antes de tocar "selección"</span>
-</div>
 
 <label for="pCategory">Categoría</label>
 <select id="pCategory"></select>
 
 <label for="pDescription">Descripción (opcional)</label>
 <textarea id="pDescription" placeholder="Tamaño, detalles, tiempo de entrega..."></textarea>
-<div class="color-tool">
-<input type="color" id="pDescColor" value="#201d18">
-<button type="button" class="secondary" data-color-apply="pDescription" data-mode="selection">Colorear selección</button>
-<button type="button" class="secondary" data-color-apply="pDescription" data-mode="all">Colorear todo</button>
-<span class="hint-inline">Marcá una palabra o frase de la descripción antes de tocar "selección"</span>
-</div>
 
 <label>Materias primas usadas</label>
 <p class="hint" style="margin:0 0 0.4rem;">Elegí qué usa este producto y cuánto.</p>
