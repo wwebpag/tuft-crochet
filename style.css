@@ -87,20 +87,11 @@ body {
   line-height: 0.95;
   margin: 0;
   text-transform: uppercase;
-  background: linear-gradient(100deg, var(--c1) 0%, var(--c3) 35%, var(--c2) 70%, var(--c4) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  background-size: 200% 100%;
-  animation: titleShift 8s ease-in-out infinite;
-}
-@keyframes titleShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  color: var(--c1);
 }
 .tagline {
   font-size: 1.05rem;
-  color: rgba(246,241,230,0.7);
+  color: var(--c2);
   margin: 0.75rem 0 1.5rem;
 }
 .contact-row {
@@ -290,6 +281,7 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   font-size: 0.95rem;
   margin: 0 0 0.3rem;
   line-height: 1.25;
+  color: var(--c3);
 }
 .card-price {
   font-family: var(--mono);
@@ -348,9 +340,11 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   padding: 2rem 1rem 3rem;
   font-family: var(--mono);
   font-size: 0.75rem;
-  color: rgba(246,241,230,0.4);
+  color: var(--c5);
 }
 .foot a { color: rgba(246,241,230,0.55); }
+
+.product-desc { color: var(--c4); }
 
 /* ---------- Barra superior: carrito + acceso admin ---------- */
 .top-right-bar {
