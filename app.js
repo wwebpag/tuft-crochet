@@ -241,7 +241,6 @@ function buildCard(product, index) {
     const imgEl = document.createElement("img");
     imgEl.src = img;
     imgEl.alt = product.name || "";
-    imgEl.loading = "lazy";
     media.appendChild(imgEl);
   }
   if (ofertaVigente(product) > 0) {
