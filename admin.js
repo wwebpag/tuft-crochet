@@ -44,6 +44,7 @@ function choosePalette(p) {
   currentColores = { fondo: p.fondo, acentos: [...p.acentos] };
   syncColorInputs();
   renderPaletteGrid();
+  applyAdminTheme(currentColores);
 }
 
 function syncColorInputs() {
@@ -59,6 +60,15 @@ function readColorInputs() {
     acentos: [1, 2, 3, 4, 5].map((i) => document.getElementById(`colorAcento${i}`).value),
   };
   renderPaletteGrid();
+  applyAdminTheme(currentColores);
+}
+
+// Pinta el panel de admin con el mismo fondo y acentos que la tienda pública.
+function applyAdminTheme(colores) {
+  if (!colores || !colores.fondo || !Array.isArray(colores.acentos)) return;
+  const root = document.documentElement.style;
+  root.setProperty("--navy", colores.fondo);
+  colores.acentos.forEach((hex, i) => root.setProperty(`--c${i + 1}`, hex));
 }
 
 function getConfig() {
@@ -227,6 +237,7 @@ async function loadSite() {
   }
   syncColorInputs();
   renderPaletteGrid();
+  applyAdminTheme(currentColores);
 }
 
 async function saveSite() {
@@ -719,27 +730,6 @@ function recalcular() {
   `;
 }
 
-// ---------- Color de letras (nombre / descripción) ----------
-
-function aplicarColorTexto(fieldId, colorInputId, mode) {
-  const el = document.getElementById(fieldId);
-  const color = document.getElementById(colorInputId).value;
-  if (mode === "all") {
-    el.value = `<span style="color:${color}">${el.value}</span>`;
-    return;
-  }
-  const start = el.selectionStart;
-  const end = el.selectionEnd;
-  if (start === end) {
-    alert("Primero seleccioná (marcá con el dedo/mouse) la palabra o frase que querés colorear.");
-    return;
-  }
-  const before = el.value.slice(0, start);
-  const selected = el.value.slice(start, end);
-  const after = el.value.slice(end);
-  el.value = `${before}<span style="color:${color}">${selected}</span>${after}`;
-}
-
 // ---------- Productos ----------
 
 let editingId = null;
@@ -967,20 +957,6 @@ function init() {
   document.getElementById("pRedondeo").addEventListener("input", recalcular);
   document.getElementById("btnAddProduct").addEventListener("click", saveProduct);
   document.getElementById("btnCancelEdit").addEventListener("click", cancelEdit);
-
-  const COLOR_FIELD_MAP = {
-    pName: "pNameColor",
-    pDescription: "pDescColor",
-    siteNameInput: "siteNameColor",
-    siteTaglineInput: "siteTaglineColor",
-    siteFooterInput: "siteFooterColor",
-  };
-  document.querySelectorAll("[data-color-apply]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const field = btn.dataset.colorApply;
-      aplicarColorTexto(field, COLOR_FIELD_MAP[field], btn.dataset.mode);
-    });
-  });
 
   renderMuList();
   recalcular();
