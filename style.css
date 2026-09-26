@@ -37,8 +37,10 @@ body {
   font-family: var(--body);
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background-color 0.4s ease;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
+body.ready { opacity: 1; }
 
 /* ---------- Banderines ---------- */
 .bunting {
