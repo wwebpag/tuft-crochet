@@ -333,22 +333,7 @@ function renderProducts(products, isEmptyStore) {
     rows.push(row);
   }
 
-  if ("IntersectionObserver" in window && !REDUCED_MOTION) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
-    rows.forEach((r) => io.observe(r));
-  } else {
-    rows.forEach((r) => r.classList.add("in-view"));
-  }
+  rows.forEach((r) => r.classList.add("in-view"));
 }
 
 function populateCategoryFilter(products) {
