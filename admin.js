@@ -928,7 +928,23 @@ async function deleteProduct(id) {
 
 // ---------- Init ----------
 
-function init() {
+async function aplicarTemaPublico() {
+  try {
+    const res = await fetch("site.json?t=" + Date.now());
+    if (res.ok) {
+      const site = await res.json();
+      if (site.colores && Array.isArray(site.colores.acentos) && site.colores.acentos.length === 5) {
+        currentColores = { fondo: site.colores.fondo, acentos: [...site.colores.acentos] };
+      }
+    }
+  } catch (e) {
+    // sin conexión o sin site.json todavía: se queda con el tema por defecto
+  }
+  applyAdminTheme(currentColores);
+}
+
+async function init() {
+  await aplicarTemaPublico();
   document.body.classList.add("ready");
   const cfg = getConfig();
   if (cfg && cfg.token) {
