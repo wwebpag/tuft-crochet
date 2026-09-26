@@ -929,6 +929,7 @@ async function deleteProduct(id) {
 // ---------- Init ----------
 
 function init() {
+  document.body.classList.add("ready");
   const cfg = getConfig();
   if (cfg && cfg.token) {
     document.getElementById("ghToken").value = cfg.token;
