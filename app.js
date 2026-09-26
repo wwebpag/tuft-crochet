@@ -84,11 +84,11 @@ function renderBunting() {
 
 function renderSite(site) {
   if (!site) return;
-  document.title = (site.nombre || "Tienda").replace(/<[^>]+>/g, "");
-  document.getElementById("siteName").innerHTML = site.nombre || "Mi Tienda";
-  document.getElementById("siteTagline").innerHTML = site.eslogan || "";
+  document.title = site.nombre || "Tienda";
+  document.getElementById("siteName").textContent = site.nombre || "Mi Tienda";
+  document.getElementById("siteTagline").textContent = site.eslogan || "";
   const footerEl = document.getElementById("footerText");
-  if (footerEl) footerEl.innerHTML = site.footerTexto || "Hecho con hilo y aguja 🧵";
+  if (footerEl) footerEl.textContent = site.footerTexto || "Hecho con hilo y aguja 🧵";
   const row = document.getElementById("contactRow");
   row.innerHTML = "";
   if (site.whatsapp) {
@@ -181,7 +181,7 @@ function openLightbox(product) {
   const info = document.createElement("div");
   info.className = "lightbox-info";
   let html = `<p class="card-name">${product.name}</p>${priceBlockHTML(product)}`;
-  if (product.description) html += `<p>${product.description}</p>`;
+  if (product.description) html += `<p class="product-desc">${product.description}</p>`;
   if (product.videoLink && !isYouTube(product.videoLink)) {
     html += `<a class="video-link-btn" href="${product.videoLink}" target="_blank" rel="noopener">▶ Ver video</a>`;
   }
