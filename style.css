@@ -150,9 +150,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 .line-row {
   position: relative;
   margin-bottom: 4.5rem;
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 .line-row.in-view { opacity: 1; transform: translateY(0); }
 
