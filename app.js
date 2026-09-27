@@ -164,6 +164,8 @@ function openLightbox(product) {
   const lb = document.getElementById("lightbox");
   const content = document.getElementById("lightboxContent");
   content.innerHTML = "";
+  const topBar = document.querySelector(".top-right-bar");
+  if (topBar) topBar.style.display = "none";
 
   const media = document.createElement("div");
   if (product.video) {
@@ -567,11 +569,15 @@ async function init() {
   document.getElementById("lightboxClose").addEventListener("click", () => {
     document.getElementById("lightbox").hidden = true;
     document.getElementById("lightboxContent").innerHTML = "";
+    const topBar = document.querySelector(".top-right-bar");
+    if (topBar) topBar.style.display = "";
   });
   document.getElementById("lightbox").addEventListener("click", (e) => {
     if (e.target.id === "lightbox") {
       e.currentTarget.hidden = true;
       document.getElementById("lightboxContent").innerHTML = "";
+      const topBar = document.querySelector(".top-right-bar");
+      if (topBar) topBar.style.display = "";
     }
   });
 }
