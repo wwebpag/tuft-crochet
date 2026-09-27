@@ -358,13 +358,13 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
 .admin-link {
   display: inline-block;
   padding: 0.4rem 0.6rem;
-  opacity: 0.4;
+  opacity: 0.5;
   text-decoration: none;
   font-size: 1.3rem;
   line-height: 1;
-  color: var(--paper);
+  color: rgba(128,128,128,0.9);
 }
-.admin-link:hover { opacity: 0.85; }
+.admin-link:hover { opacity: 0.9; }
 
 /* ---------- Carrito ---------- */
 .cart-fab {
