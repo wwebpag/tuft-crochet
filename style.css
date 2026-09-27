@@ -317,7 +317,6 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
   transition: opacity 0.15s ease;
 }
 .add-to-cart-btn:hover { opacity: 0.85; }
-.add-to-cart-btn:hover { background: var(--accent, var(--rust)); color: #fff; }
 
 /* ---------- Destellos al tocar una prenda ---------- */
 .spark {
